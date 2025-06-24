@@ -1,0 +1,53 @@
+# Environment Variables
+.env
+.env.*           # e.g., .env.development, .env.local
+
+# OS-specific
+Thumbs.db        # Windows
+ehthumbs.db
+*.bak            # backup files
+*.tmp
+*.temp
+
+# Log files
+logs/
+*.pid
+*.seed
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Build output
+build/
+
+# Optional: Docker and Deployment
+docker-compose.override.yml
+docker.env
+
+# React-specific (client)
+client/.env.local
+client/.env.development.local
+client/.env.test.local
+client/.env.production.local
+
+# MongoDB dump or backup files
+dump/
+
+# Backend specific
+server/.env
+server/.env.*
+
+# Binaries or compilers
+*.exe
+*.out
+*.class
+
+# Others (you can tweak as per your usage)
+*.tgz
+*.zip
+*.7z
+*.tar
+*.gz
+*.sqlite
+*.db
