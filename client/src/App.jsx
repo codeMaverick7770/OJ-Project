@@ -1,24 +1,24 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import Login from './components/Login'
-import Landing from './pages/Landing'
-import Register from './pages/Register'  
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import AppRoutes from './routes/AppRoutes';
+import API from './services/api';
 
 function App() {
+  useEffect(() => {
+    API.get('/ping')
+      .then(res => console.log(res.data))
+      .catch(err => console.error('❌ FE-BE connection failed', err));
+  }, []);
+
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} /> 
-      </Routes>
+      <AppRoutes />
       <Footer />
     </Router>
-  )
+  );
 }
 
-export default App
+export default App; // ✅ This line is necessary!
