@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
 import API from './services/api';
+import ProblemList from './pages/ProblemList';
 
 function App() {
   useEffect(() => {
