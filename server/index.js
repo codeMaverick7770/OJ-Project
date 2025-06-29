@@ -1,28 +1,54 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './database/connection.js';
-import authRoutes from './routes/authRoutes.js';
-import pingRoutes from './routes/pingRoutes.js';
-import problemRoutes from './routes/problemRoutes.js';
-
-dotenv.config(); 
-connectDB();
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { generateFile } = require('./generateFile');
+const { executeCpp } = require('./executeCpp');
 
 const app = express();
+dotenv.config();
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5178'],
-  credentials: true
-}));
+/**
+ * Entry point for the Express server.
+ *
+ * 1. Receives code + language choice from the client (`/run` endpoint).
+ * 2. Persists the source code to a temporary file (`generateFile`).
+ * 3. Compiles & executes the code (`executeCpp`).
+ * 4. Returns the program output back to the caller as JSON.
+ *
+ * NOTE: Only the C++ workflow is fully wired-up right now, but because the
+ *       architecture is modular you can plug in extra languages by adding
+ *       another `execute<LANG>.js` implementation and a simple switch-case.
+ */
 
+
+//middlewares
+app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use('/api', pingRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/problem', problemRoutes);
+app.get("/", (req, res) => {
+    res.json({ online: 'compiler' });
+});
+
+app.post("/run", async (req, res) => {
+    // const language = req.body.language;
+    // const code = req.body.code;
+
+    const { language = 'cpp', code } = req.body;
+    if (code === undefined) {
+        return res.status(404).json({ success: false, error: "Empty code!" });
+    }
+    try {
+        const filePath = generateFile(language, code);
+        const output = await executeCpp(filePath);
+        res.json({ filePath, output });
+    } catch (error) {
+        res.status(500).json({ error: error });
+    }
+});
 
 const PORT = process.env.PORT || 8000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Server is listening on port ${PORT}!`);
 });

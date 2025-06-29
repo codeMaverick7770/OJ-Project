@@ -1,4 +1,5 @@
 # Environment Variables
+.vscode
 .env
 .env.*           # e.g., .env.development, .env.local
 
