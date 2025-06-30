@@ -4,22 +4,23 @@ import CompilerEditor from '../components/CompilerEditor';
 import OutputBox from '../components/OutputBox';
 
 function CompilerPage() {
-  const [code, setCode] = useState(`#include <iostream>\nint main() {\n  std::cout << "Hello World!";\n  return 0;\n}`);
+  const [language, setLanguage] = useState('cpp');
+  const [code, setCode] = useState({
+    cpp: `#include <iostream>\nint main() {\n  std::cout << "Hello World!";\n  return 0;\n}`,
+    java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello World!");\n  }\n}`,
+    python: `print("Hello World!")`
+  });
   const [output, setOutput] = useState('');
 
   const handleRun = async () => {
-    const payload = {
-      language: 'cpp',
-      code
-    };
-
     try {
       const { data } = await axios.post(
         import.meta.env.VITE_COMPILER_URL,
-        payload,
         {
-          withCredentials: true // ✅ Ensures credentials are sent
-        }
+          language,
+          code: code[language]
+        },
+        { withCredentials: true }
       );
       setOutput(data.output);
     } catch (err) {
@@ -27,17 +28,27 @@ function CompilerPage() {
     }
   };
 
+  const handleLanguageChange = (e) => {
+    setLanguage(e.target.value);
+  };
+
   return (
     <div className="min-h-screen py-10 px-4 bg-white/80 backdrop-blur-sm">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-semibold mb-4 text-center">⚙️ Online Code Compiler</h2>
 
-        <select className="border rounded px-3 py-2 mb-4" disabled>
+        <select
+          className="border rounded px-3 py-2 mb-4"
+          value={language}
+          onChange={handleLanguageChange}
+        >
           <option value="cpp">C++</option>
+          <option value="java">Java</option>
+          <option value="python">Python</option>
         </select>
 
         <div className="border rounded p-4 bg-gray-50">
-          <CompilerEditor code={code} setCode={setCode} />
+          <CompilerEditor code={code[language]} setCode={(newCode) => setCode({ ...code, [language]: newCode })} />
         </div>
 
         <button
