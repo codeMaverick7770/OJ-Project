@@ -7,7 +7,13 @@ import PrivateRoute from '../components/PrivateRoute';
 import CreateProblem from '../pages/CreateProblem';
 import ProblemList from '../pages/ProblemList';
 import ProblemPage from '../pages/ProblemPage';
-import EditProblem from '../pages/EditProblem'; 
+import EditProblem from '../pages/EditProblem';
+import CompilerPage from '../pages/CompilerPage';
+
+<Routes>
+  ...
+  <Route path="/compiler" element={<CompilerPage />} />
+</Routes>
 
 export default function AppRoutes() {
   return (
@@ -19,7 +25,8 @@ export default function AppRoutes() {
       <Route path="/create-problem" element={<PrivateRoute><CreateProblem /></PrivateRoute>} />
       <Route path="/problems" element={<ProblemList />} />
       <Route path="/problem/:id" element={<ProblemPage />} />
-      <Route path="/edit-problem/:id" element={<PrivateRoute><EditProblem /></PrivateRoute>} /> {/* ✅ New route */}
+      <Route path="/edit-problem/:id" element={<PrivateRoute><EditProblem /></PrivateRoute>} />
+      <Route path="/compiler" element={<CompilerPage />} />
     </Routes>
   );
 }

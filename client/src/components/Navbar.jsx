@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const { user, logout } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   return (
     <nav className="bg-white border-gray-200 dark:bg-gray-900">
@@ -42,6 +42,11 @@ export default function Navbar() {
                   <li>
                     <Link to="/problems" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
                       Problems
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/compiler" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                      Compiler
                     </Link>
                   </li>
                   {user.role === 'admin' && (
@@ -86,6 +91,13 @@ export default function Navbar() {
                 Problems
               </Link>
             </li>
+            {user && (
+              <li>
+                <Link to="/compiler" className="block py-2 px-3 text-gray-900 hover:bg-gray-100 dark:text-white">
+                  Compiler
+                </Link>
+              </li>
+            )}
             {!user && (
               <>
                 <li>
@@ -104,5 +116,5 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }
