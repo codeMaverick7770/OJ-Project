@@ -1,12 +1,17 @@
 const { exec } = require("child_process");
 
-const executePython = (filepath) => {
-  return new Promise((resolve, reject) => {
-    exec(`python "${filepath}"`, (error, stdout, stderr) => {
-      if (error || stderr) return reject({ error, stderr });
-      resolve(stdout);
+const executePython = (filepath, inputPath) => {
+    return new Promise((resolve, reject) => {
+        const command = `python ${filepath} < ${inputPath}`;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) return reject({ error, stderr });
+            if (stderr) return reject({ stderr });
+            resolve(stdout);
+        });
     });
-  });
 };
 
-module.exports = { executePython };
+module.exports = {
+    executePython,
+};
