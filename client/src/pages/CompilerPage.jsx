@@ -1,80 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import CompilerEditor from '../components/CompilerEditor';
 import OutputBox from '../components/OutputBox';
+import API from '../services/api';
 
-function CompilerPage() {
+export default function CompilerPage() {
+  const { id } = useParams(); // problem ID if solving
+  const [problem, setProblem] = useState(null);
   const [language, setLanguage] = useState('cpp');
   const [code, setCode] = useState({
-    cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  string name;\n  getline(cin, name);\n  cout << "Hello, " << name << endl;\n  return 0;\n}`,
-    java: `import java.util.*;\npublic class Main {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    String name = sc.nextLine();\n    System.out.println("Hello, " + name);\n  }\n}`,
-    python: `name = input()\nprint("Hello,", name)`
+    cpp: '#include <iostream>\nusing namespace std;\nint main(){string s;getline(cin,s);cout<<"Hello, "<<s;return 0;}',
+    java: 'import java.util.*;\npublic class Main{public static void main(String[]args){Scanner sc=new Scanner(System.in);String s=sc.nextLine();System.out.println("Hello, "+s);}}',
+    python: 's=input()\nprint("Hello,",s)'
   });
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
+  const [feedback, setFeedback] = useState([]);
 
-  const handleRun = async () => {
-    try {
-      const { data } = await axios.post(
-        import.meta.env.VITE_COMPILER_URL,
-        {
-          language,
-          code: code[language],
-          input
-        },
-        { withCredentials: true }
-      );
-      setOutput(data.output);
-    } catch (err) {
-      setOutput(err.response?.data?.error?.stderr || "Something went wrong");
+  useEffect(() => {
+    if (id) {
+      API.get(`/problem/${id}`)
+        .then(res => {
+          setProblem(res.data);
+          setLanguage(Object.keys(res.data.solutionCode).find(lang => res.data.solutionCode[lang]));
+          setCode(res.data.solutionCode);
+          setFeedback([]);
+        })
+        .catch(console.error);
     }
+  }, [id]);
+
+  const handleRun = () => {
+    axios.post(import.meta.env.VITE_COMPILER_URL, { language, code: code[language], input }, { withCredentials: true })
+      .then(res => setOutput(res.data.output))
+      .catch(err => setOutput(err.response?.data?.error?.stderr || 'Error'));
   };
 
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
+  const handleSubmit = async () => {
+    if (!problem) return;
+    const results = [];
+    for (const tc of problem.testCases) {
+      const { data } = await axios.post(import.meta.env.VITE_COMPILER_URL, {
+        language,
+        code: code[language],
+        input: tc.input
+      }, { withCredentials: true });
+      results.push({
+        input: tc.input,
+        expected: tc.expectedOutput.trim(),
+        actual: data.output.trim(),
+        pass: data.output.trim() === tc.expectedOutput.trim()
+      });
+    }
+    setFeedback(results);
   };
 
   return (
-    <div className="min-h-screen py-10 px-4 bg-white/80 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-3xl font-semibold mb-4 text-center">⚙️ Online Code Compiler</h2>
+    <div className="min-h-screen bg-white/80 px-4 py-10 backdrop-blur-sm">
+      <div className="max-w-5xl mx-auto space-y-6">
 
-        <select
-          className="border rounded px-3 py-2 mb-4"
-          value={language}
-          onChange={handleLanguageChange}
-        >
+        <h2 className="text-3xl font-semibold text-center">⚙️ {problem ? 'Solve – ' + problem.title : 'Online Code Compiler'}</h2>
+
+        {problem && (
+          <p className="bg-gray-100 dark:bg-gray-700 p-4 rounded whitespace-pre-line">
+            {problem.description}
+          </p>
+        )}
+
+        <select value={language} onChange={e => setLanguage(e.target.value)} className="border rounded px-3 py-2">
           <option value="cpp">C++</option>
           <option value="java">Java</option>
           <option value="python">Python</option>
         </select>
 
-        <div className="border rounded p-4 bg-gray-50 mb-4">
+        <div className="border rounded bg-gray-50 p-4">
           <CompilerEditor
             code={code[language]}
-            setCode={(newCode) => setCode({ ...code, [language]: newCode })}
+            setCode={newCode => setCode(c => ({ ...c, [language]: newCode }))}
           />
         </div>
 
         <textarea
-          className="w-full p-2 border rounded mb-4 text-sm"
-          rows="4"
-          placeholder="Enter input here (if any)..."
+          className="w-full p-2 border rounded text-sm"
+          rows={3}
+          placeholder="Standard input…"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={e => setInput(e.target.value)}
         />
 
-        <button
-          className="mb-4 px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded hover:opacity-90"
-          onClick={handleRun}
-        >
-          ▶️ Run
-        </button>
+        <div className="flex gap-4">
+          <button onClick={handleRun} className="px-5 py-2 bg-purple-500 text-white rounded">Run</button>
+          {problem && <button onClick={handleSubmit} className="px-5 py-2 bg-green-600 text-white rounded">Submit to Test Cases</button>}
+        </div>
 
         <OutputBox output={output} />
+
+        {feedback.length > 0 && (
+          <div className="mt-6 space-y-4">
+            {feedback.map((r, i) => (
+              <div key={i} className={`p-4 rounded ${r.pass ? 'bg-green-100' : 'bg-red-100'}`}>
+                <p><strong>Test Case {i + 1}:</strong></p>
+                <p><strong>Input:</strong> {r.input}</p>
+                <p><strong>Expected:</strong> {r.expected}</p>
+                <p><strong>Got:</strong> {r.actual}</p>
+                <p>{r.pass ? '✅ Passed' : '❌ Failed'}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );
 }
-
-export default CompilerPage;

@@ -5,16 +5,24 @@ const problemSchema = new mongoose.Schema({
   description: { type: String, required: true },
   difficulty: { type: String, enum: ['Easy', 'Medium', 'Hard'], default: 'Easy' },
   tags: [String],
+
+  solutionCode: {
+    cpp: { type: String, default: '' },
+    java: { type: String, default: '' },
+    python: { type: String, default: '' }
+  },
+
   testCases: [
     {
-      input: String,
-      expectedOutput: String,
+      input: { type: String, required: true },
+      expectedOutput: { type: String, required: true }
     }
   ],
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
+    ref: 'User'
+  }
 }, { timestamps: true });
 
 export default mongoose.model('Problem', problemSchema);

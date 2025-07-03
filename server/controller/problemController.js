@@ -2,10 +2,14 @@ import Problem from '../models/problem.js';
 
 // Admin: Create problem
 export const createProblem = async (req, res) => {
-  const { title, description, difficulty } = req.body;
+  const { title, description, difficulty, tags = [], testCases, solutionCode = {} } = req.body;
 
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied: Admins only' });
+  }
+
+  if (!Array.isArray(testCases) || testCases.length === 0) {
+    return res.status(400).json({ error: 'At least one test case is required' });
   }
 
   try {
@@ -13,8 +17,12 @@ export const createProblem = async (req, res) => {
       title,
       description,
       difficulty,
+      tags,
+      testCases,
+      solutionCode,
       createdBy: req.user.id,
     });
+
     console.log('✅ Created:', problem.title);
     res.status(201).json({ message: 'Problem created successfully', problem });
   } catch (err) {

@@ -27,6 +27,7 @@ export default function AppRoutes() {
       <Route path="/problem/:id" element={<ProblemPage />} />
       <Route path="/edit-problem/:id" element={<PrivateRoute><EditProblem /></PrivateRoute>} />
       <Route path="/compiler" element={<CompilerPage />} />
+      <Route path="/solve/:id" element={<CompilerPage />} />
     </Routes>
   );
 }
