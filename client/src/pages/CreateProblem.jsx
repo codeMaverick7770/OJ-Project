@@ -10,8 +10,9 @@ export default function CreateProblem() {
     tags: '',
     bulkInput: '',
     bulkOutput: '',
-    solutionCode: '',
     language: 'cpp',
+    starterCode: '',
+    solutionCode: '',
   });
 
   const [error, setError] = useState('');
@@ -37,6 +38,13 @@ export default function CreateProblem() {
       expectedOutput: outputLines[i]?.trim() || '',
     }));
 
+    const starterCode = {
+      cpp: '',
+      java: '',
+      python: '',
+    };
+    starterCode[form.language] = form.starterCode;
+
     const solutionCode = {
       cpp: '',
       java: '',
@@ -50,6 +58,7 @@ export default function CreateProblem() {
       difficulty: form.difficulty,
       tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       testCases,
+      starterCode,
       solutionCode,
     };
 
@@ -136,7 +145,7 @@ export default function CreateProblem() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Solution Code</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Select Language</h3>
             <select
               name="language"
               value={form.language}
@@ -147,6 +156,22 @@ export default function CreateProblem() {
               <option value="java">Java</option>
               <option value="python">Python</option>
             </select>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Starter Code</h3>
+            <textarea
+              name="starterCode"
+              value={form.starterCode}
+              onChange={handleChange}
+              placeholder={`Starter template shown to the user\nLeave empty to use default Hello World.`}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+              rows={6}
+            />
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Solution Code</h3>
             <textarea
               name="solutionCode"
               value={form.solutionCode}

@@ -1,72 +1,66 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import API from '../services/api'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import API from '../services/api';
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const res = await API.post('/auth/login', { email, password })
-      const { token, user } = res.data
-      localStorage.setItem('token', token)
-      login(user)
-      navigate('/dashboard')
+      const res = await API.post('/auth/login', { email, password });
+      const { token, user } = res.data;
+      localStorage.setItem('token', token);
+      login(user);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.error || 'Login failed');
     }
-  }
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-          Sign in to your account
-        </h2>
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-        <form className="space-y-5" onSubmit={handleSubmit}>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="bg-gray-900 bg-opacity-70 backdrop-blur-lg p-8 rounded-xl w-full max-w-md border border-purple-500 shadow-purple-glow">
+        <h2 className="text-3xl font-bold text-purple-400 text-center mb-6">Welcome Back</h2>
+        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email address
-            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-purple-300">Email</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-purple-300">Password</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
-            className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-md font-semibold text-white hover:shadow-lg hover:scale-105 transition"
           >
             Login
           </button>
         </form>
       </div>
     </div>
-  )
+  );
 }

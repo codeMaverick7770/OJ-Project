@@ -8,113 +8,90 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="bg-white border-gray-200 dark:bg-gray-900">
-      <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-        <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-          <img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="OJ Logo" />
-          <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">JustiCode</span>
+    <nav className="bg-black bg-opacity-60 backdrop-blur border-b border-white/20 shadow-lg fixed top-0 w-full z-50 text-white">
+      <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2">
+          <span className="text-2xl font-extrabold bg-gradient-to-r from-pink-500 to-purple-400 bg-clip-text text-transparent">
+            JustiCode
+          </span>
         </Link>
 
+        {/* Nav Links */}
         {user && (
-          <div className="relative flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-            >
-              <img
-                className="w-8 h-8 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-3.jpg"
-                alt="user"
-              />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 top-12 z-50 w-44 bg-white rounded-lg shadow dark:bg-gray-700">
-                <div className="px-4 py-3">
-                  <span className="block text-sm text-gray-900 dark:text-white">{user.name}</span>
-                  <span className="block text-sm text-gray-500 truncate dark:text-gray-400">{user.email}</span>
-                </div>
-                <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
-                  <li>
-                    <Link to="/dashboard" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Dashboard
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/problems" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Problems
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/compiler" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Compiler
-                    </Link>
-                  </li>
-                  {user.role === 'admin' && (
-                    <li>
-                      <Link to="/create-problem" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                        Create Problem
-                      </Link>
-                    </li>
-                  )}
-                  <li>
-                    <button
-                      onClick={logout}
-                      className="w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-                    >
-                      Sign out
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
+          <ul className="hidden md:flex gap-8 text-lg font-medium items-center justify-center flex-grow text-white">
+            <li><Link to="/" className="hover:underline underline-offset-8 decoration-white transition">Home</Link></li>
+            <li><Link to="/problems" className="hover:underline underline-offset-8 decoration-white transition">Problems</Link></li>
+            <li><Link to="/compiler" className="hover:underline underline-offset-8 decoration-white transition">Compiler</Link></li>
+          </ul>
         )}
 
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="inline-flex items-center p-2 w-10 h-10 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 17 14">
-            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h15M1 7h15M1 13h15" />
-          </svg>
-        </button>
+        {/* Buttons */}
+        <div className="hidden md:flex items-center gap-4">
+          {!user ? (
+            <Link
+              to="/register"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-2 rounded-md font-medium hover:opacity-90 transition"
+            >
+              Get Started
+            </Link>
+          ) : (
+            <div className="relative">
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center space-x-2">
+                <img
+                  src="/assets/user.png"
+                  className="w-8 h-8 rounded-full border border-white"
+                  alt="user"
+                />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-black/80 border border-white/20 rounded shadow-xl text-white backdrop-blur-lg">
+                  <div className="p-3 border-b border-white/10">
+                    <p className="text-sm font-semibold">{user.name}</p>
+                    <p className="text-xs text-gray-300">{user.email}</p>
+                  </div>
+                  <ul className="text-sm">
+                    <li><Link to="/dashboard" className="block px-4 py-2 hover:bg-white/10">Dashboard</Link></li>
+                    <li><Link to="/create-problem" className="block px-4 py-2 hover:bg-white/10">Create Problem</Link></li>
+                    <li><button onClick={logout} className="w-full text-left px-4 py-2 hover:bg-white/10">Sign Out</button></li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-        <div className={`${menuOpen ? 'block' : 'hidden'} w-full md:flex md:w-auto md:order-1`}>
-          <ul className="flex flex-col md:flex-row md:space-x-8 font-medium p-4 mt-4 border rounded-lg bg-gray-50 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 md:border-0 dark:border-gray-700">
-            <li>
-              <Link to="/" className="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 dark:text-white">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/problems" className="block py-2 px-3 text-gray-900 hover:bg-gray-100 dark:text-white">
-                Problems
-              </Link>
-            </li>
-            {user && (
-              <li>
-                <Link to="/compiler" className="block py-2 px-3 text-gray-900 hover:bg-gray-100 dark:text-white">
-                  Compiler
-                </Link>
-              </li>
-            )}
-            {!user && (
-              <>
-                <li>
-                  <Link to="/login" className="block py-2 px-3 text-gray-900 hover:bg-gray-100 dark:text-white">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/register" className="block py-2 px-3 text-gray-900 hover:bg-gray-100 dark:text-white">
-                    Register
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <button onClick={() => setMenuOpen(!menuOpen)} className="text-white focus:outline-none">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {menuOpen && (
+        <ul className="md:hidden flex flex-col bg-black border-t border-white/20 text-white text-center">
+          {user ? (
+            <>
+              <li><Link to="/" className="py-2 hover:bg-white/10">Home</Link></li>
+              <li><Link to="/problems" className="py-2 hover:bg-white/10">Problems</Link></li>
+              <li><Link to="/compiler" className="py-2 hover:bg-white/10">Compiler</Link></li>
+            </>
+          ) : (
+            <li>
+              <Link
+                to="/register"
+                className="py-2 hover:bg-white/10 text-white"
+              >
+                Get Started
+              </Link>
+            </li>
+          )}
+        </ul>
+      )}
     </nav>
   );
 }

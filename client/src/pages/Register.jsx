@@ -1,96 +1,82 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import API from '../services/api'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../services/api';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.id]: e.target.value })
-  }
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const res = await API.post('/auth/register', form)
-      console.log(res.data)
-      navigate('/login')
+      await API.post('/auth/register', form);
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed')
+      setError(err.response?.data?.error || 'Registration failed');
     }
-  }
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-          Create your account
-        </h2>
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="bg-gray-900 bg-opacity-70 backdrop-blur-lg p-8 rounded-xl w-full max-w-md border border-purple-500 shadow-purple-glow">
+        <h2 className="text-3xl font-bold text-purple-400 text-center mb-6">Create Your Account</h2>
+        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="name" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Full Name
-            </label>
+            <label htmlFor="name" className="block text-sm font-medium text-purple-300">Full Name</label>
             <input
               type="text"
               id="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="John Doe"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
+              className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="John Doe"
             />
           </div>
-
           <div>
-            <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email address
-            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-purple-300">Email</label>
             <input
               type="email"
               id="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
+              className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="you@example.com"
             />
           </div>
-
           <div>
-            <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-purple-300">Password</label>
             <input
               type="password"
               id="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
+              className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="••••••••"
             />
           </div>
-
           <button
             type="submit"
-            className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-md font-semibold text-white hover:shadow-lg hover:scale-105 transition"
           >
             Sign Up
           </button>
-
-          <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-center text-purple-300 mt-4">
             Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:underline">
+            <a href="/login" className="underline text-purple-400 hover:text-pink-400 transition">
               Login
             </a>
           </p>
         </form>
       </div>
     </div>
-  )
+  );
 }
