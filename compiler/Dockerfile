@@ -7,7 +7,6 @@ RUN npm install
 
 COPY . .
 
-
 RUN apt update && \
     apt install -y g++ python3 default-jdk && \
     apt clean

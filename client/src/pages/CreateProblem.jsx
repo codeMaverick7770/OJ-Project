@@ -38,18 +38,10 @@ export default function CreateProblem() {
       expectedOutput: outputLines[i]?.trim() || '',
     }));
 
-    const starterCode = {
-      cpp: '',
-      java: '',
-      python: '',
-    };
+    const starterCode = { cpp: '', java: '', python: '' };
     starterCode[form.language] = form.starterCode;
 
-    const solutionCode = {
-      cpp: '',
-      java: '',
-      python: '',
-    };
+    const solutionCode = { cpp: '', java: '', python: '' };
     solutionCode[form.language] = form.solutionCode;
 
     const payload = {
@@ -67,7 +59,6 @@ export default function CreateProblem() {
       const res = await API.post('/problem/create', payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       console.log('✅ Problem created:', res.data);
       navigate('/dashboard');
     } catch (err) {
@@ -77,116 +68,42 @@ export default function CreateProblem() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-md w-full max-w-2xl">
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Create New Problem</h2>
-        {error && <p className="text-red-500 mb-2">{error}</p>}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-[#0c0c2d] to-black px-4 py-12">
+      <div className="bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-2xl w-full max-w-3xl shadow-xl text-white">
+        <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
+          Create New Problem
+        </h2>
+
+        {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="title"
-            placeholder="Title"
-            value={form.title}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            value={form.description}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-          />
-          <select
-            name="difficulty"
-            value={form.difficulty}
-            onChange={handleChange}
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-          >
+          <input type="text" name="title" placeholder="Title" value={form.title} onChange={handleChange} required className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+
+          <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} required className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" rows={4} />
+
+          <select name="difficulty" value={form.difficulty} onChange={handleChange} className="w-full p-3 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
             <option>Easy</option>
             <option>Medium</option>
             <option>Hard</option>
           </select>
 
-          <input
-            type="text"
-            name="tags"
-            placeholder="Tags (comma-separated)"
-            value={form.tags}
-            onChange={handleChange}
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-          />
+          <input type="text" name="tags" placeholder="Tags (comma-separated)" value={form.tags} onChange={handleChange} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
 
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Test Case Inputs</h3>
-            <textarea
-              name="bulkInput"
-              value={form.bulkInput}
-              onChange={handleChange}
-              placeholder={`One input per line\nExample:\n1 2\n4 5`}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              rows={4}
-              required
-            />
+          <textarea name="bulkInput" value={form.bulkInput} onChange={handleChange} placeholder={`Test Case Inputs (one per line)`} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" rows={4} required />
 
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Expected Outputs</h3>
-            <textarea
-              name="bulkOutput"
-              value={form.bulkOutput}
-              onChange={handleChange}
-              placeholder={`One output per line\nExample:\n3\n9`}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              rows={4}
-              required
-            />
-          </div>
+          <textarea name="bulkOutput" value={form.bulkOutput} onChange={handleChange} placeholder={`Expected Outputs (one per line)`} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" rows={4} required />
 
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Select Language</h3>
-            <select
-              name="language"
-              value={form.language}
-              onChange={handleChange}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-            >
-              <option value="cpp">C++</option>
-              <option value="java">Java</option>
-              <option value="python">Python</option>
-            </select>
-          </div>
+          <select name="language" value={form.language} onChange={handleChange} className="w-full p-3 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+            <option value="python">Python</option>
+          </select>
 
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Starter Code</h3>
-            <textarea
-              name="starterCode"
-              value={form.starterCode}
-              onChange={handleChange}
-              placeholder={`Starter template shown to the user\nLeave empty to use default Hello World.`}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              rows={6}
-            />
-          </div>
+          <textarea name="starterCode" value={form.starterCode} onChange={handleChange} placeholder={`Starter Code`} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" rows={6} />
 
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mt-4 mb-1">Solution Code</h3>
-            <textarea
-              name="solutionCode"
-              value={form.solutionCode}
-              onChange={handleChange}
-              placeholder={`Paste correct solution code here`}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white mt-2"
-              rows={6}
-              required
-            />
-          </div>
+          <textarea name="solutionCode" value={form.solutionCode} onChange={handleChange} placeholder={`Correct Solution Code`} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" rows={6} required />
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
+          <button type="submit" className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:brightness-110 text-white font-semibold transition-all duration-200">
             Submit Problem
           </button>
         </form>

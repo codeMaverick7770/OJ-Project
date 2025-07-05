@@ -10,6 +10,7 @@ const { generateInputFile } = require('./generateInputFile');
 dotenv.config();
 
 const app = express();
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin.startsWith('http://localhost:')) {
@@ -22,6 +23,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// 🔧 Run Code Endpoint
 app.post('/run', async (req, res) => {
   const { language = 'cpp', code, input = '' } = req.body;
 
@@ -49,11 +51,11 @@ app.post('/run', async (req, res) => {
 
     res.json({ output });
   } catch (err) {
+    console.error("Run error:", err);
     res.status(500).json({ error: err });
   }
 });
 
-
-const PORT = process.env.PORT || 8001;
 require('./cleanup');
+const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => console.log(`🚀 Compiler server running on port ${PORT}`));

@@ -37,6 +37,12 @@ export default function Landing() {
   .glass:hover {
     box-shadow: 0 0 16px rgba(255, 255, 255, 0.15);
   }
+  .grid-background {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), 
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.2;
+  }
 `}</style>
 
       {/* Star Background */}
@@ -59,6 +65,8 @@ export default function Landing() {
             animation: "moveTwinkle 200s linear infinite",
           }}
         />
+        {/* Grid Background */}
+        <div className="absolute inset-0 grid-background"></div>
       </div>
 
       {/* Floating Tech Logos */}
