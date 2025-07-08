@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/config.js';
 
+// Register Controller
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -13,7 +14,9 @@ export const register = async (req, res) => {
 
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
@@ -25,6 +28,7 @@ export const register = async (req, res) => {
   }
 };
 
+// Login Controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -35,16 +39,21 @@ export const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
 
     res.status(200).json({
       token,
       user: {
+        _id: user._id, 
         name: user.name,
         email: user.email,
         role: user.role

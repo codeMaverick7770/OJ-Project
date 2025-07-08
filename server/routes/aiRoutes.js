@@ -3,7 +3,7 @@ import generateAiResponse from '../utils/genAiResponse.js';
 
 const router = express.Router();
 
-router.post('/ai-review', async (req, res) => {
+router.post('/', async (req, res) => {
   const { code } = req.body;
 
   if (!code || code.trim() === '') {

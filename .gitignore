@@ -52,3 +52,5 @@ server/.env.*
 *.gz
 *.sqlite
 *.db
+# Keys folder
+keys/

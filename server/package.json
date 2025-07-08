@@ -18,10 +18,13 @@
   "homepage": "https://github.com/codeMaverick7770/OJ-Project#readme",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.8.0",
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "mongodb": "^6.17.0",
     "mongoose": "^8.16.0"
   }
 }

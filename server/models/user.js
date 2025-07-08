@@ -4,7 +4,21 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'user' } // 'user' or 'admin'
+  role: { type: String, default: 'user' },
+
+  // Leaderboard fields
+  solvedProblems: [
+    {
+      problem: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Problem',
+      },
+      solvedAt: { type: Date, default: Date.now },
+    }
+  ],
+  score: { type: Number, default: 0 },
+  submissionCount: { type: Number, default: 0 } 
 });
 
-export default mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

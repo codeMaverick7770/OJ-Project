@@ -1,4 +1,3 @@
-// ProblemList.jsx
 import { useEffect, useState } from 'react';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 export default function ProblemList() {
   const [problems, setProblems] = useState([]);
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const { user } = useAuth();
 
@@ -26,30 +26,96 @@ export default function ProblemList() {
     }
   };
 
+  const filtered = problems.filter(problem =>
+    problem.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const difficultyColor = (level) => {
+    if (level === 'Easy') return 'text-green-400';
+    if (level === 'Medium') return 'text-yellow-400';
+    if (level === 'Hard') return 'text-red-500';
+    return 'text-gray-300';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white py-20 px-6">
-      <h2 className="text-4xl font-extrabold text-center mb-6 bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">Problems</h2>
-      {error && <p className="text-red-500 text-center">{error}</p>}
-      <ul className="space-y-4 max-w-4xl mx-auto">
-        {problems.map(problem => (
-          <li key={problem._id} className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-lg shadow-lg">
-            <Link to={`/problem/${problem._id}`}>
-              <h3 className="text-xl font-semibold hover:underline text-purple-300">
-                {problem.title}
-              </h3>
-            </Link>
-            <p className="text-sm text-gray-300">{problem.description}</p>
-            <p className="text-xs mt-1 text-gray-400">Difficulty: {problem.difficulty}</p>
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
+          🚀 Practice Problems
+        </h2>
 
-            {user?.role === 'admin' && (
-              <div className="mt-2 flex gap-2">
-                <Link to={`/edit-problem/${problem._id}`} className="px-3 py-1 bg-yellow-500 text-black text-sm rounded hover:bg-yellow-600 transition-all duration-200">Edit</Link>
-                <button onClick={() => handleDelete(problem._id)} className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-all duration-200">Delete</button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
+        {/* Search Bar */}
+        <div className="mb-6 flex justify-end">
+          <input
+            type="text"
+            placeholder="Search problems..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-4 py-2 rounded-md bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-400 text-white placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto border-collapse border border-white/10">
+            <thead className="bg-white/10">
+              <tr>
+                <th className="p-3 border border-white/10 text-left">#</th>
+                <th className="p-3 border border-white/10 text-left">Title</th>
+                <th className="p-3 border border-white/10 text-left">Difficulty</th>
+                {user?.role === 'admin' && <th className="p-3 border border-white/10">Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={user?.role === 'admin' ? 4 : 3} className="text-center text-gray-400 py-8">
+                    No problems found.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((problem, idx) => (
+                  <tr
+                    key={problem._id}
+                    className="hover:bg-white/10 transition-all duration-200"
+                  >
+                    <td className="p-3 border border-white/10">{idx + 1}</td>
+                    <td className="p-3 border border-white/10">
+                      <Link
+                        to={`/problem/${problem._id}`}
+                        className="text-purple-300 font-medium hover:underline"
+                      >
+                        {problem.title}
+                      </Link>
+                    </td>
+                    <td className={`p-3 border border-white/10 font-semibold ${difficultyColor(problem.difficulty)}`}>
+                      {problem.difficulty}
+                    </td>
+                    {user?.role === 'admin' && (
+                      <td className="p-3 border border-white/10 flex gap-2 justify-center">
+                        <Link
+                          to={`/edit-problem/${problem._id}`}
+                          className="px-3 py-1 bg-yellow-500 text-black text-sm rounded hover:bg-yellow-600 transition-all"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(problem._id)}
+                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-all"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

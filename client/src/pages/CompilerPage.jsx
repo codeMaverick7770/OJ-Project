@@ -30,10 +30,7 @@ export default function CompilerPage() {
         .then((res) => {
           const prob = res.data;
           setProblem(prob);
-          const availableLang =
-            Object.keys(prob.starterCode).find(
-              (lang) => prob.starterCode[lang]
-            ) || "cpp";
+          const availableLang = Object.keys(prob.starterCode).find((lang) => prob.starterCode[lang]) || "cpp";
           setLanguage(availableLang);
           setCode((prev) => {
             const currentCode = prev[availableLang]?.trim();
@@ -42,8 +39,7 @@ export default function CompilerPage() {
             return isUnmodified
               ? {
                   ...prev,
-                  [availableLang]:
-                    prob.starterCode[availableLang] || defaultCode,
+                  [availableLang]: prob.starterCode[availableLang] || defaultCode,
                 }
               : prev;
           });
@@ -74,10 +70,11 @@ export default function CompilerPage() {
     if (!problem) return;
     setIsSubmitting(true);
     const results = [];
-    setAiReview(""); 
+    setAiReview("");
 
     for (const tc of problem.testCases) {
       try {
+        
         const { data } = await axios.post(
           import.meta.env.VITE_COMPILER_URL,
           {
@@ -105,6 +102,33 @@ export default function CompilerPage() {
     }
 
     setFeedback(results);
+    const allTestsPassed = results.every((r) => r.pass);
+
+    if (allTestsPassed) {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) throw new Error("User ID not found in localStorage");
+        const submissionData = {
+          userId,
+          problemId: problem._id,
+          language,
+          code: code[language],
+        };
+        const response = await API.post("/submissions", submissionData);
+
+        if (response?.data?.success) {
+          setOutput("🎉 All test cases passed! Your solution has been submitted and leaderboard updated.");
+        } else {
+          setOutput("✅ All test cases passed, but submission could not be completed.");
+        }
+      } catch (error) {
+        console.error("Submission error:", error);
+        setOutput("⚠️ Submission error occurred. Please try again.");
+      }
+    } else {
+      setOutput("❌ Some test cases failed. You can request an AI review for assistance.");
+    }
+
     setIsSubmitting(false);
   };
 
@@ -128,11 +152,10 @@ export default function CompilerPage() {
       setAiReview(data.aiResponse || "No feedback received from AI service.");
     } catch (err) {
       console.error("AI review error:", err);
-
       let errorMessage = "Sorry, couldn't generate AI feedback at this time.";
       if (err.response) {
         errorMessage += ` (Status: ${err.response.status})`;
-        if (err.response.data && err.response.data.error) {
+        if (err.response.data?.error) {
           errorMessage += ` - ${err.response.data.error}`;
         }
       } else if (err.request) {
@@ -140,14 +163,13 @@ export default function CompilerPage() {
       } else {
         errorMessage += ` - ${err.message}`;
       }
-
       setAiReview(errorMessage);
     } finally {
       setIsLoadingAi(false);
     }
   };
 
-  const hasFailedTests = feedback.some((result) => !result.pass);
+  const hasFailedTests = feedback.some((r) => !r.pass);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white px-4 pt-16 pb-10 py-10">
@@ -201,33 +223,7 @@ export default function CompilerPage() {
             disabled={isRunning}
             className="bg-gradient-to-r from-purple-600 to-pink-500 hover:brightness-110 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
           >
-            {isRunning ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <span>Running...</span>
-              </>
-            ) : (
-              <span>Run</span>
-            )}
+            {isRunning ? <><LoaderSpinner /><span>Running...</span></> : <span>Run</span>}
           </button>
 
           {problem && (
@@ -236,33 +232,7 @@ export default function CompilerPage() {
               disabled={isSubmitting}
               className="bg-black/80 hover:bg-black/90 border border-white/20 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
             >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <span>Submit to Test Cases</span>
-              )}
+              {isSubmitting ? <><LoaderSpinner /><span>Submitting...</span></> : <span>Submit to Test Cases</span>}
             </button>
           )}
         </div>
@@ -272,22 +242,12 @@ export default function CompilerPage() {
             {feedback.map((r, i) => (
               <div
                 key={i}
-                className={`p-4 rounded-lg ${
-                  r.pass
-                    ? "bg-green-900/40 border border-green-500"
-                    : "bg-red-900/40 border border-red-500"
-                }`}
+                className={`p-4 rounded-lg ${r.pass ? "bg-green-900/40 border border-green-500" : "bg-red-900/40 border border-red-500"}`}
               >
                 <p className="font-semibold text-sm">Test Case {i + 1}</p>
-                <p>
-                  <strong>Input:</strong> {r.input}
-                </p>
-                <p>
-                  <strong>Expected:</strong> {r.expected}
-                </p>
-                <p>
-                  <strong>Got:</strong> {r.actual}
-                </p>
+                <p><strong>Input:</strong> {r.input}</p>
+                <p><strong>Expected:</strong> {r.expected}</p>
+                <p><strong>Got:</strong> {r.actual}</p>
                 <p>{r.pass ? "✅ Passed" : "❌ Failed"}</p>
               </div>
             ))}
@@ -299,49 +259,12 @@ export default function CompilerPage() {
                   disabled={isLoadingAi}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
                 >
-                  {isLoadingAi ? (
-                    <>
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>Generating AI Review...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                      <span>Get AI Code Review</span>
-                    </>
-                  )}
+                  {isLoadingAi ? <><LoaderSpinner /><span>Generating AI Review...</span></> : <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Get AI Code Review</span>
+                  </>}
                 </button>
 
                 {aiReview && (
@@ -350,9 +273,7 @@ export default function CompilerPage() {
                       AI Code Review
                     </h3>
                     <div className="prose prose-invert max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm">
-                        {aiReview}
-                      </pre>
+                      <pre className="whitespace-pre-wrap text-sm">{aiReview}</pre>
                     </div>
                   </div>
                 )}
@@ -362,5 +283,19 @@ export default function CompilerPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function LoaderSpinner() {
+  return (
+    <svg
+      className="animate-spin h-5 w-5 text-white"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
   );
 }
