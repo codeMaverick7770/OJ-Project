@@ -1,3 +1,7 @@
-.node_modules
-.vscode
-.DS_Store
+server/
+compiler/
+node_modules/
+.vscode/
+keys/
+Users/
+*.log
