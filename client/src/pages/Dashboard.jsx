@@ -1,15 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 
 export default function Dashboard() {
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) setUser(JSON.parse(storedUser));
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (location.state?.showLoginSuccess) {
+      setShowToast(true);
+      const timer = setTimeout(() => setShowToast(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   if (loading) {
     return (
@@ -68,6 +78,36 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* ✅ Login Success Toast */}
+      {showToast && (
+        <div className="fixed top-5 right-5 z-50 bg-white text-black px-6 py-4 rounded-md shadow-lg w-72 animate-fadeIn">
+          <div className="font-semibold mb-1">✅ Logged in successfully</div>
+          <div className="w-full h-1 bg-gray-300 mt-2 rounded overflow-hidden">
+            <div className="h-full bg-green-500 animate-progress"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.4s ease-in-out;
+          }
+          @keyframes progress {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+          .animate-progress {
+            animation: progress 3s linear forwards;
+          }
+        `}
+      </style>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// src/components/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,11 +17,9 @@ export default function Login() {
 
     try {
       const res = await API.post('/auth/login', { email, password }, { withCredentials: true });
-
       const { token, user } = res.data;
 
       if (!user || !user._id) {
-        console.error("❌ Login succeeded but user._id is missing:", user);
         setError("Unexpected response from server. Please try again.");
         return;
       }
@@ -28,10 +27,10 @@ export default function Login() {
       localStorage.setItem("userId", user._id);
       localStorage.setItem('token', token);
 
-      console.log("✅ Stored userId in localStorage:", user._id);
-
       login(user);
-      navigate('/dashboard');
+
+      // ✅ Redirect to Dashboard with state
+      navigate('/dashboard', { state: { showLoginSuccess: true } });
     } catch (err) {
       console.error("❌ Login error:", err);
       setError(err.response?.data?.error || 'Login failed');
@@ -50,7 +49,6 @@ export default function Login() {
               type="email"
               id="email"
               value={email}
-              autoComplete="email"
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -63,7 +61,6 @@ export default function Login() {
               type="password"
               id="password"
               value={password}
-              autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"

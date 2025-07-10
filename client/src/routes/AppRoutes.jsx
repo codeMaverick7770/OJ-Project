@@ -18,6 +18,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Dashboard />} /> {/* Ensure this route is present */}
       <Route path="/create-problem" element={<AdminRoute><CreateProblem /></AdminRoute>} /> 
       <Route path="/problems" element={<ProblemList />} />
       <Route path="/problem/:id" element={<ProblemPage />} />

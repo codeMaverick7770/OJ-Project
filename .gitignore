@@ -53,3 +53,4 @@ server/.env.*
 *.db
 # Keys folder
 keys/
+node_modules
