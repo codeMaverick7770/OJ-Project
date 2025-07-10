@@ -1,7 +1,3 @@
-server/
-compiler/
 node_modules/
-.vscode/
-keys/
-Users/
-*.log
+dist/
+.vite/
