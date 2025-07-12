@@ -9,8 +9,12 @@ import aiRoutes from './routes/aiRoutes.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import submissionRoutes from './routes/submissionRoutes.js';
 import { verifyAdmin } from './middleware/admin.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config(); 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 connectDB();
 
 const app = express();
