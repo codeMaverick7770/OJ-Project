@@ -14,14 +14,27 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://kickdsa.online',
-    'https://www.kickdsa.online'
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+
+      // Frontend domains
+      'https://kickdsa.online',
+      'https://www.kickdsa.online',
+
+      // Backend API domains
+      'https://backend.kickdsa.online',
+      'https://www.backend.kickdsa.online',
+
+      // Compiler service domains
+      'https://compiler.kickdsa.online',
+      'https://www.compiler.kickdsa.online',
+    ],
+    credentials: true,
+  })
+);
+
 
 
 app.use(express.json());
