@@ -11,7 +11,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/leaderboard");
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/leaderboard`);
         if (Array.isArray(res.data)) {
           setUsers(res.data);
         } else {
