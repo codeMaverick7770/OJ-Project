@@ -12,15 +12,15 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin.startsWith('http://localhost:','https://kickdsa.online', 'https://www.kickdsa.online')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'https://kickdsa.online',
+    'https://www.kickdsa.online'
+  ],
   credentials: true
 }));
+
+
 app.use(express.json());
 
 // 🔧 Run Code Endpoint
