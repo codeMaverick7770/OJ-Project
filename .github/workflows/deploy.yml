@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      EC2_HOST: ec2-3-110-145-123.ap-south-1.compute.amazonaws.com
+      EC2_HOST: ec2-51-21-37-63.eu-north-1.compute.amazonaws.com
       EC2_USER: ec2-user
 
     steps:
