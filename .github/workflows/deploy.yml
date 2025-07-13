@@ -9,6 +9,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      EC2_HOST: ec2-3-110-145-123.ap-south-1.compute.amazonaws.com
+      EC2_USER: ec2-user
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,21 +25,24 @@ jobs:
 
       - name: Debug EC2_HOST value
         run: |
-          echo "::add-mask::${{ secrets.EC2_HOST }}"
-          echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+          echo "EC2_HOST: $EC2_HOST"
 
-      - name: Add EC2 to known hosts (with debug)
+      - name: DNS & ping test
+        run: |
+          echo "Testing DNS:"
+          nslookup $EC2_HOST || true
+
+          echo "Pinging EC2:"
+          ping -c 3 $EC2_HOST || true
+
+      - name: Add EC2 to known hosts
         run: |
           echo "Running ssh-keyscan..."
-          ssh-keyscan -v -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>&1
-          if [ $? -ne 0 ]; then
-            echo "❌ ssh-keyscan failed!"
-            exit 1
-          fi
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2 and pull latest code
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh $EC2_USER@$EC2_HOST << 'EOF'
             cd /home/ec2-user/OJ-Project
             git pull origin main
             npm install --prefix server
