@@ -19,9 +19,19 @@ jobs:
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Add EC2 to known hosts
+      - name: Debug EC2_HOST value
         run: |
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          echo "::add-mask::${{ secrets.EC2_HOST }}"
+          echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+
+      - name: Add EC2 to known hosts (with debug)
+        run: |
+          echo "Running ssh-keyscan..."
+          ssh-keyscan -v -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>&1
+          if [ $? -ne 0 ]; then
+            echo "❌ ssh-keyscan failed!"
+            exit 1
+          fi
 
       - name: Deploy to EC2 and pull latest code
         run: |
