@@ -31,6 +31,33 @@ export const createProblem = async (req, res) => {
   }
 };
 
+// Admin: Bulk create problems
+export const bulkCreateProblems = async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admins only' });
+  }
+
+  const problems = req.body;
+
+  if (!Array.isArray(problems)) {
+    return res.status(400).json({ error: 'Expected an array of problems' });
+  }
+
+  try {
+    const enrichedProblems = problems.map(p => ({
+      ...p,
+      createdBy: req.user.id,
+    }));
+
+    const result = await Problem.insertMany(enrichedProblems);
+    res.status(201).json({ message: `${result.length} problems added.` });
+  } catch (err) {
+    console.error('❌ Bulk create failed:', err.message);
+    res.status(500).json({ error: 'Failed to create problems in bulk' });
+  }
+};
+
+
 // Public: Fetch all problems
 export const getAllProblems = async (req, res) => {
   try {

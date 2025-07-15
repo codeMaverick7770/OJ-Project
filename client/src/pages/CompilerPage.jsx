@@ -1,9 +1,13 @@
+// src/pages/CompilerPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import CompilerEditor from "../components/CompilerEditor";
 import OutputBox from "../components/OutputBox";
 import API from "../services/api";
+import AIHelpModal from "../components/AIHelpModal";
+import { Player } from "@lottiefiles/react-lottie-player";
+import { Wand2 } from "lucide-react";
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << "Hello, World!";\n  return 0;\n}`,
@@ -18,11 +22,16 @@ export default function CompilerPage() {
   const [code, setCode] = useState(defaultHelloWorld);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [feedback, setFeedback] = useState([]);
-  const [aiReview, setAiReview] = useState("");
-  const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [exampleResults, setExampleResults] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [runMode, setRunMode] = useState("example");
+
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiHelpResponse, setAiHelpResponse] = useState("");
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -30,27 +39,59 @@ export default function CompilerPage() {
         .then((res) => {
           const prob = res.data;
           setProblem(prob);
-          const availableLang = Object.keys(prob.starterCode).find((lang) => prob.starterCode[lang]) || "cpp";
+          const availableLang =
+            Object.keys(prob.starterCode).find(
+              (lang) => prob.starterCode[lang]
+            ) || "cpp";
           setLanguage(availableLang);
-          setCode((prev) => {
-            const currentCode = prev[availableLang]?.trim();
-            const defaultCode = defaultHelloWorld[availableLang]?.trim();
-            const isUnmodified = currentCode === defaultCode;
-            return isUnmodified
-              ? {
-                  ...prev,
-                  [availableLang]: prob.starterCode[availableLang] || defaultCode,
-                }
-              : prev;
-          });
-          setFeedback([]);
-          setAiReview("");
+          setCode((prev) => ({
+            ...prev,
+            [availableLang]:
+              prob.starterCode[availableLang] ||
+              defaultHelloWorld[availableLang],
+          }));
         })
         .catch(console.error);
     }
   }, [id]);
 
+  const runExampleTestCases = async () => {
+    if (!problem) return;
+    setRunMode("example");
+    setIsRunning(true);
+    const results = [];
+
+    for (const ex of problem.examples) {
+      try {
+        const { data } = await axios.post(
+          import.meta.env.VITE_COMPILER_URL,
+          { language, code: code[language], input: ex.input },
+          { withCredentials: true }
+        );
+        const actual = data.output.trim();
+        const expected = ex.output.trim();
+        results.push({
+          input: ex.input,
+          expected,
+          actual,
+          pass: actual === expected,
+        });
+      } catch {
+        results.push({
+          input: ex.input,
+          expected: ex.output.trim(),
+          actual: "Error",
+          pass: false,
+        });
+      }
+    }
+
+    setExampleResults(results);
+    setIsRunning(false);
+  };
+
   const handleRun = async () => {
+    setRunMode("custom");
     setIsRunning(true);
     try {
       const res = await axios.post(
@@ -69,233 +110,462 @@ export default function CompilerPage() {
   const handleSubmit = async () => {
     if (!problem) return;
     setIsSubmitting(true);
+    setRunMode("example");
+    const userId = localStorage.getItem("userId");
+    let firstFailed = null;
     const results = [];
-    setAiReview("");
 
     for (const tc of problem.testCases) {
       try {
-        
         const { data } = await axios.post(
           import.meta.env.VITE_COMPILER_URL,
-          {
-            language,
-            code: code[language],
-            input: tc.input,
-          },
+          { language, code: code[language], input: tc.input },
           { withCredentials: true }
         );
-
-        results.push({
-          input: tc.input,
-          expected: tc.expectedOutput.trim(),
-          actual: data.output.trim(),
-          pass: data.output.trim() === tc.expectedOutput.trim(),
-        });
+        const actual = data.output.trim();
+        const expected = tc.expectedOutput.trim();
+        const pass = actual === expected;
+        const result = { input: tc.input, expected, actual, pass };
+        results.push(result);
+        if (!pass && !firstFailed) firstFailed = result;
       } catch {
-        results.push({
+        const result = {
           input: tc.input,
           expected: tc.expectedOutput.trim(),
           actual: "Error",
           pass: false,
-        });
+        };
+        results.push(result);
+        if (!firstFailed) firstFailed = result;
       }
     }
 
-    setFeedback(results);
-    const allTestsPassed = results.every((r) => r.pass);
+    setExampleResults(results);
 
-    if (allTestsPassed) {
+    if (firstFailed) {
+      setFeedback(firstFailed);
+      setOutput("❌ Failed on a hidden test case. You can request AI help.");
+    } else {
       try {
-        const userId = localStorage.getItem("userId");
-        if (!userId) throw new Error("User ID not found in localStorage");
-        const submissionData = {
+        await API.post("/submissions", {
           userId,
           problemId: problem._id,
           language,
           code: code[language],
-        };
-        const response = await API.post("/submissions", submissionData);
-
-        if (response?.data?.success) {
-          setOutput("🎉 All test cases passed! Your solution has been submitted and leaderboard updated.");
-        } else {
-          setOutput("✅ All test cases passed, but submission could not be completed.");
-        }
-      } catch (error) {
-        console.error("Submission error:", error);
-        setOutput("⚠️ Submission error occurred. Please try again.");
+        });
+        setOutput(
+          "🎉 All test cases passed! Your solution has been submitted."
+        );
+        setShowPopup(true);
+      } catch {
+        setOutput("✅ Passed all tests, but submission error occurred.");
       }
-    } else {
-      setOutput("❌ Some test cases failed. You can request an AI review for assistance.");
     }
 
     setIsSubmitting(false);
   };
 
-  const handleAiReview = async () => {
+  const handleAiRequest = async (level) => {
+    if (!problem) return;
     setIsLoadingAi(true);
-    setAiReview("");
-
+    setAiHelpResponse("");
     try {
       const baseURL = import.meta.env.VITE_COMPILER_BASE_URL;
-
       const { data } = await axios.post(
-        `${baseURL}/ai-review`,
+        `${baseURL}/api/ai-review`,
         {
           code: code[language],
-          problemId: problem?._id,
-          description: problem?.description,
+          problemId: problem._id,
+          level,
         },
         { withCredentials: true }
       );
-
-      setAiReview(data.aiResponse || "No feedback received from AI service.");
-    } catch (err) {
-      console.error("AI review error:", err);
-      let errorMessage = "Sorry, couldn't generate AI feedback at this time.";
-      if (err.response) {
-        errorMessage += ` (Status: ${err.response.status})`;
-        if (err.response.data?.error) {
-          errorMessage += ` - ${err.response.data.error}`;
-        }
-      } else if (err.request) {
-        errorMessage += " - No response received from server.";
-      } else {
-        errorMessage += ` - ${err.message}`;
-      }
-      setAiReview(errorMessage);
+      setAiHelpResponse(data.aiResponse || "No feedback received.");
+    } catch {
+      setAiHelpResponse("AI review failed.");
     } finally {
       setIsLoadingAi(false);
     }
   };
 
-  const hasFailedTests = feedback.some((r) => !r.pass);
+  const beautifyCode = () => {
+    try {
+      const formatted = code[language]
+        .split("\n")
+        .map((line) => line.trimStart())
+        .join("\n");
+      setCode((prev) => ({ ...prev, [language]: formatted }));
+    } catch {}
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white px-4 pt-16 pb-10 py-10">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <h2 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
-          {problem ? `Problem – ${problem.title}` : "Online Code Compiler"}
-        </h2>
-
-        {problem && (
-          <div className="bg-white/5 backdrop-blur-md p-4 rounded-lg text-sm border border-white/10 shadow-inner">
-            <pre className="whitespace-pre-wrap">{problem.description}</pre>
+    <div className="min-h-screen bg-[#141219] text-white pt-16 px-2">
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-xl text-center text-black shadow-xl">
+            <Player
+              autoplay
+              loop={false}
+              src="/assets/celebration.json"
+              style={{ height: "200px", width: "200px" }}
+              onEvent={(e) => {
+                if (e === "complete") setShowPopup(false);
+              }}
+            />
+            <h2 className="text-2xl font-bold mt-2">🎉 Congratulations!</h2>
+            <p>Your solution has been submitted and leaderboard updated.</p>
+            <button
+              className="mt-4 neon-btn px-6 py-2 text-sm"
+              onClick={() => setShowPopup(false)}
+            >
+              Close
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="flex justify-end">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="bg-black/60 text-white border border-white/20 px-4 py-2 rounded"
-          >
-            <option value="cpp">C++</option>
-            <option value="java">Java</option>
-            <option value="python">Python</option>
-          </select>
+      <AIHelpModal
+        visible={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onRequest={handleAiRequest}
+        response={aiHelpResponse}
+        loading={isLoadingAi}
+      />
+
+      <div className="flex h-[80vh] rounded overflow-hidden">
+        <div className="w-[40%] p-4 overflow-auto glass-card rounded-l-xl text-sm text-white/80">
+          {problem && (
+            <div>
+              <h2 className="text-xl font-bold mb-2 text-[#6C00FF]">
+                {problem.title}
+              </h2>
+              <section className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-white/60">Description</h3>
+                  <pre className="whitespace-pre-wrap">
+                    {problem.description}
+                  </pre>
+                </div>
+                {problem.inputFormat && (
+                  <div>
+                    <h3 className="font-semibold text-white/60">
+                      Input Format
+                    </h3>
+                    <pre className="whitespace-pre-wrap">
+                      {problem.inputFormat}
+                    </pre>
+                  </div>
+                )}
+                {problem.outputFormat && (
+                  <div>
+                    <h3 className="font-semibold text-white/60">
+                      Output Format
+                    </h3>
+                    <pre className="whitespace-pre-wrap">
+                      {problem.outputFormat}
+                    </pre>
+                  </div>
+                )}
+                {problem.constraints?.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-white/60">Constraints</h3>
+                    <ul className="list-disc list-inside">
+                      {problem.constraints.map((line, idx) => (
+                        <li key={idx}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {problem.examples?.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-white/60">Examples</h3>
+                    {problem.examples.map((ex, idx) => (
+                      <div key={idx} className="mb-2">
+                        <p>
+                          <strong>Input:</strong>
+                        </p>
+                        <pre>{ex.input}</pre>
+                        <p>
+                          <strong>Output:</strong>
+                        </p>
+                        <pre>{ex.output}</pre>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/5 rounded-xl border border-white/10 shadow-lg p-4 backdrop-blur-md">
+        <div className="w-[60%] flex flex-col glass-card rounded-r-xl">
+          <div className="flex justify-between items-center px-4 pt-2">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-[#282846] text-white border border-[#6C00FF] px-3 py-1 rounded text-sm"
+            >
+              <option value="cpp">C++</option>
+              <option value="java">Java</option>
+              <option value="python">Python</option>
+            </select>
+
+            <div className="flex gap-2">
+              <button
+                className="icon-btn"
+                onClick={beautifyCode}
+                title="Auto Format"
+              >
+                <Wand2 size={20} />
+              </button>
+
+              <button
+                className="neon-btn ai-review-btn text-xs py-1 px-3"
+                onClick={() => setShowAiModal(true)}
+              >
+                AI Code Review
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 mt-2">
+            <button
+              className={`px-6 py-2 text-sm font-semibold transition-all duration-300 ${
+                runMode === "example"
+                  ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                  : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+              }`}
+              onClick={() => setRunMode("example")}
+            >
+              Example Test Cases
+            </button>
+            <button
+              className={`px-6 py-2 text-sm font-semibold transition-all duration-300 ${
+                runMode === "custom"
+                  ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                  : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+              }`}
+              onClick={() => setRunMode("custom")}
+            >
+              Custom Input
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-auto p-2">
             <CompilerEditor
               code={code[language]}
               setCode={(newCode) =>
                 setCode((prev) => ({ ...prev, [language]: newCode }))
               }
+              language={language}
             />
-          </div>
-
-          <div className="space-y-4">
-            <textarea
-              className="bg-white/5 backdrop-blur-md w-full rounded-xl p-4 border border-white/10 text-white text-sm outline-none min-h-[150px] placeholder:text-white/50"
-              placeholder="Standard Input..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <OutputBox output={output} />
-          </div>
-        </div>
-
-        <div className="flex justify-center gap-6">
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="bg-gradient-to-r from-purple-600 to-pink-500 hover:brightness-110 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
-          >
-            {isRunning ? <><LoaderSpinner /><span>Running...</span></> : <span>Run</span>}
-          </button>
-
-          {problem && (
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="bg-black/80 hover:bg-black/90 border border-white/20 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
-            >
-              {isSubmitting ? <><LoaderSpinner /><span>Submitting...</span></> : <span>Submit to Test Cases</span>}
-            </button>
-          )}
-        </div>
-
-        {feedback.length > 0 && (
-          <div className="mt-6 space-y-4">
-            {feedback.map((r, i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-lg ${r.pass ? "bg-green-900/40 border border-green-500" : "bg-red-900/40 border border-red-500"}`}
-              >
-                <p className="font-semibold text-sm">Test Case {i + 1}</p>
-                <p><strong>Input:</strong> {r.input}</p>
-                <p><strong>Expected:</strong> {r.expected}</p>
-                <p><strong>Got:</strong> {r.actual}</p>
-                <p>{r.pass ? "✅ Passed" : "❌ Failed"}</p>
-              </div>
-            ))}
-
-            {hasFailedTests && (
-              <div className="flex flex-col items-center mt-6">
-                <button
-                  onClick={handleAiReview}
-                  disabled={isLoadingAi}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-semibold px-6 py-2 rounded-full shadow-md flex items-center gap-2 disabled:opacity-70"
-                >
-                  {isLoadingAi ? <><LoaderSpinner /><span>Generating AI Review...</span></> : <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>Get AI Code Review</span>
-                  </>}
-                </button>
-
-                {aiReview && (
-                  <div className="mt-6 p-4 bg-indigo-900/30 border border-indigo-500 rounded-lg w-full">
-                    <h3 className="text-lg font-semibold mb-2 text-indigo-300">
-                      AI Code Review
-                    </h3>
-                    <div className="prose prose-invert max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm">{aiReview}</pre>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {runMode === "custom" && (
+              <textarea
+                className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
+                rows={4}
+                placeholder="Standard Input..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
             )}
+            <OutputBox
+              output={output}
+              runMode={runMode}
+              exampleResults={exampleResults}
+            />
           </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center mt-6 gap-4">
+        <button
+          onClick={() =>
+            runMode === "example" ? runExampleTestCases() : handleRun()
+          }
+          disabled={isRunning}
+          className="run-btn px-6 py-2 text-sm"
+        >
+          {isRunning ? "Running..." : "Run"}
+        </button>
+
+        {problem && (
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="submit-btn px-6 py-2 text-sm"
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
         )}
       </div>
-    </div>
-  );
+
+      {feedback && (
+        <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
+          <p className="font-semibold text-sm">❌ Failing Test Case</p>
+          <p>
+            <strong>Input:</strong> {feedback.input}
+          </p>
+          <p>
+            <strong>Expected:</strong> {feedback.expected}
+          </p>
+          <p>
+            <strong>Got:</strong> {feedback.actual}
+          </p>
+        </div>
+      )}
+
+      <style>{`
+  .neon-run-btn {
+    background: linear-gradient(90deg, #7286ff, #fe7587);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(255, 117, 135, 0.4);
+  }
+
+  .neon-run-btn:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+  }
+
+  .white-outline-btn {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    font-weight: 600;
+    border-radius: 0px;
+    transition: all 0.3s ease;
+  }
+
+  .white-outline-btn:hover {
+    background-color: white;
+    color: black;
+  }
+
+  .toggle-btn {
+    font-size: 0.875rem;
+    padding: 0.4rem 1rem;
+    background: #282846;
+    color: white;
+    transition: all 0.2s ease;
+    border: none;
+    font-weight: 500;
+  }
+
+  .toggle-btn.active {
+    background: #6C00FF;
+    font-weight: 600;
+  }
+
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+  }
+  .run-btn {
+  background: linear-gradient(90deg, #7286ff, #fe7587);
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-radius: 6px;
 }
 
-function LoaderSpinner() {
-  return (
-    <svg
-      className="animate-spin h-5 w-5 text-white"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
+.run-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.submit-btn {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: white;
+  color: black;
+}
+.ai-review-btn {
+  position: relative;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  transform: translate(-20px, 4px);
+  box-shadow:
+    0 0 6px #7286ff,
+    0 0 12px #7286ff,
+    0 0 20px #ff00f2,
+    0 0 30px #ff00f2;
+  animation: glow-pulse 2s infinite ease-in-out;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.ai-review-btn:hover {
+  transform: translate(-15px, 6px) scale(1.03);
+  box-shadow:
+    0 0 8px #7286ff,
+    0 0 16px #7286ff,
+    0 0 24px #ff33ff,
+    0 0 36px #ff33ff;
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow:
+      0 0 6px #7286ff,
+      0 0 12px #7286ff,
+      0 0 20px #ff00f2,
+      0 0 30px #ff00f2;
+  }
+  50% {
+    box-shadow:
+      0 0 10px #33aaff,
+      0 0 18px #33aaff,
+      0 0 30px #ff33ff,
+      0 0 40px #ff33ff;
+  }
+  100% {
+    box-shadow:
+      0 0 6px #7286ff,
+      0 0 12px #7286ff,
+      0 0 20px #ff00f2,
+      0 0 30px #ff00f2;
+  }
+}
+  .icon-btn {
+  background-color: transparent;
+  border: none;
+  padding: 0.4rem;
+  border-radius: 6px;
+  color: white;
+  transition: background 0.2s ease, transform 0.2s ease;
+  transform: translate(-50px, 10px); /* shift left (-X), down (+Y) */
+}
+
+.icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translate(-45px, 10px) scale(1.1); /* maintain shift on hover */
+  cursor: pointer;
+}
+
+.gradient-btn {
+  background: linear-gradient(90deg, #7286ff, #fe7587);
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+
+
+`}</style>
+    </div>
   );
 }

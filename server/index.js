@@ -1,3 +1,4 @@
+import './config/config.js';
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './database/connection.js';
@@ -7,14 +8,16 @@ import problemRoutes from './routes/problemRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import submissionRoutes from './routes/submissionRoutes.js';
-import { PORT } from './config/config.js'; 
+import { PORT } from './config/config.js';
+import aiVisualRoutes from './routes/aiVisualRoutes.js';
+
 connectDB();
 
 const app = express();
 
 app.use(cors({
   origin: [
-    'http://localhost:3000',
+    'http://localhost:5173',
     'https://kickdsa.online',
     'https://www.kickdsa.online',
     'https://backend.kickdsa.online',
@@ -35,6 +38,8 @@ app.use('/api/problem', problemRoutes);
 app.use('/api/ai-review', aiRoutes); 
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/visual-ai', aiVisualRoutes);
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);

@@ -1,4 +1,3 @@
-// src/components/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -26,22 +25,36 @@ export default function Login() {
 
       localStorage.setItem("userId", user._id);
       localStorage.setItem('token', token);
-
       login(user);
-
-      // ✅ Redirect to Dashboard with state
       navigate('/dashboard', { state: { showLoginSuccess: true } });
     } catch (err) {
-      console.error("❌ Login error:", err);
+      console.error("\u274C Login error:", err);
       setError(err.response?.data?.error || 'Login failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-      <div className="bg-gray-900 bg-opacity-70 backdrop-blur-lg p-8 rounded-xl w-full max-w-md border border-purple-500 shadow-purple-glow">
-        <h2 className="text-3xl font-bold text-purple-400 text-center mb-6">Welcome Back</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#141219] text-white px-4 relative overflow-hidden">
+      {/* Flare Background */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="flare-bg w-full h-full" />
+      </div>
+
+      {/* Login Card */}
+      <div className="relative z-10 bg-gray-900 bg-opacity-70 backdrop-blur-lg p-8 rounded-xl w-full max-w-md border border-purple-500 shadow-purple-glow mt-10">
+        {/* Logo + Header */}
+        <div className="flex flex-col items-center space-y-2 mb-6">
+          <img src="/assets/kickdsa.png" alt="KickDSA Logo" className="h-30" />
+          <h2 className="text-3xl font-extrabold gradient-text">Welcome to KickDSA</h2>
+          <p className="text-sm text-gray-400 text-center">
+            Your account is protected with secure authentication.
+          </p>
+        </div>
+
+        {/* Error */}
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-purple-300">Email</label>
@@ -64,7 +77,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-2 mt-1 bg-black bg-opacity-40 border border-purple-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
           <button
@@ -74,7 +87,38 @@ export default function Login() {
             Login
           </button>
         </form>
+
+        {/* Google Sign-In */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-400 mb-2">— or sign in with —</p>
+          <button
+            className="w-full flex items-center justify-center gap-2 bg-white text-black py-2 rounded-md font-medium hover:scale-105 transition"
+            onClick={() => alert("Google Sign-In not implemented")}
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              className="h-5 w-5"
+            />
+            Sign in with Google
+          </button>
+        </div>
       </div>
+
+      {/* Styles */}
+      <style>
+        {`
+          .gradient-text {
+            background: linear-gradient(90deg, #7286ff, #fe7587);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          .flare-bg {
+            background: radial-gradient(40% 40% at 50% 50%, rgba(210,32,255,0.5) 0%, rgba(210,32,255,0.15) 40%, transparent 80%);
+            filter: blur(100px);
+          }
+        `}
+      </style>
     </div>
   );
 }

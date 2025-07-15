@@ -12,10 +12,12 @@
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
+    "mermaid": "^11.8.1",
     "prismjs": "^1.30.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

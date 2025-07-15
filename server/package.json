@@ -4,7 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "description": "JustiCode backend server",
   "author": "Your Name",
@@ -17,8 +18,13 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "form-data": "^4.0.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "nodemon": "^3.1.10"
   }
 }

@@ -30,10 +30,10 @@ export default function LeaderboardPage() {
   if (loading) return <div className="text-white text-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen px-6 py-16 bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white">
+    <div className="min-h-screen px-6 py-16 bg-[#141219] text-white">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-transparent bg-clip-text">
-          🌟 Global Leaderboard
+        Global Leaderboard
         </h1>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
