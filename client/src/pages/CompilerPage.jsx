@@ -1,4 +1,3 @@
-// src/pages/CompilerPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +7,7 @@ import API from "../services/api";
 import AIHelpModal from "../components/AIHelpModal";
 import { Player } from "@lottiefiles/react-lottie-player";
 import { Wand2 } from "lucide-react";
+import Split from "react-split";
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << "Hello, World!";\n  return 0;\n}`,
@@ -28,7 +28,6 @@ export default function CompilerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [runMode, setRunMode] = useState("example");
-
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiHelpResponse, setAiHelpResponse] = useState("");
   const [isLoadingAi, setIsLoadingAi] = useState(false);
@@ -199,7 +198,18 @@ export default function CompilerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141219] text-white pt-16 px-2">
+    <div className="min-h-screen text-white relative font-sans">
+      <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center z-0" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md z-0" />
+
+      <AIHelpModal
+        visible={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onRequest={handleAiRequest}
+        response={aiHelpResponse}
+        loading={isLoadingAi}
+      />
+
       {showPopup && (
         <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-xl text-center text-black shadow-xl">
@@ -224,348 +234,328 @@ export default function CompilerPage() {
         </div>
       )}
 
-      <AIHelpModal
-        visible={showAiModal}
-        onClose={() => setShowAiModal(false)}
-        onRequest={handleAiRequest}
-        response={aiHelpResponse}
-        loading={isLoadingAi}
-      />
-
-      <div className="flex h-[80vh] rounded overflow-hidden">
-        <div className="w-[40%] p-4 overflow-auto glass-card rounded-l-xl text-sm text-white/80">
-          {problem && (
-            <div>
-              <h2 className="text-xl font-bold mb-2 text-[#6C00FF]">
-                {problem.title}
-              </h2>
-              <section className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-white/60">Description</h3>
-                  <pre className="whitespace-pre-wrap">
-                    {problem.description}
-                  </pre>
-                </div>
-                {problem.inputFormat && (
+      <div className="relative z-10 pt-20 px-4">
+        <Split
+          className="flex h-[80vh]"
+          sizes={[40, 60]}
+          minSize={300}
+          gutterSize={6}
+          gutterAlign="center"
+          cursor="col-resize"
+          gutter={() => {
+            const gutter = document.createElement("div");
+            gutter.className = "split-gutter";
+            return gutter;
+          }}
+        >
+          <div className="glass-dark p-6 overflow-auto rounded-xl text-white/90 text-base custom-scroll border border-[#7286ff]/20 shadow-[0_0_10px_#7286ff33]">
+            {problem && (
+              <>
+                <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-md">
+                  {problem.title}
+                </h2>
+                <section className="space-y-4">
                   <div>
-                    <h3 className="font-semibold text-white/60">
-                      Input Format
-                    </h3>
+                    <h3 className="font-semibold text-white/70">Description</h3>
                     <pre className="whitespace-pre-wrap">
-                      {problem.inputFormat}
+                      {problem.description}
                     </pre>
                   </div>
-                )}
-                {problem.outputFormat && (
-                  <div>
-                    <h3 className="font-semibold text-white/60">
-                      Output Format
-                    </h3>
-                    <pre className="whitespace-pre-wrap">
-                      {problem.outputFormat}
-                    </pre>
-                  </div>
-                )}
-                {problem.constraints?.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-white/60">Constraints</h3>
-                    <ul className="list-disc list-inside">
-                      {problem.constraints.map((line, idx) => (
-                        <li key={idx}>{line}</li>
+                  {problem.inputFormat && (
+                    <div>
+                      <h3 className="font-semibold text-white/70">
+                        Input Format
+                      </h3>
+                      <pre className="whitespace-pre-wrap">
+                        {problem.inputFormat}
+                      </pre>
+                    </div>
+                  )}
+                  {problem.outputFormat && (
+                    <div>
+                      <h3 className="font-semibold text-white/70">
+                        Output Format
+                      </h3>
+                      <pre className="whitespace-pre-wrap">
+                        {problem.outputFormat}
+                      </pre>
+                    </div>
+                  )}
+                  {problem.constraints?.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-white/70">
+                        Constraints
+                      </h3>
+                      <ul className="list-disc list-inside">
+                        {problem.constraints.map((line, idx) => (
+                          <li key={idx}>{line}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {problem.examples?.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-white/70">Examples</h3>
+                      {problem.examples.map((ex, idx) => (
+                        <div key={idx} className="mb-2">
+                          <p>
+                            <strong>Input:</strong>
+                          </p>
+                          <pre>{ex.input}</pre>
+                          <p>
+                            <strong>Output:</strong>
+                          </p>
+                          <pre>{ex.output}</pre>
+                        </div>
                       ))}
-                    </ul>
-                  </div>
-                )}
-                {problem.examples?.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-white/60">Examples</h3>
-                    {problem.examples.map((ex, idx) => (
-                      <div key={idx} className="mb-2">
-                        <p>
-                          <strong>Input:</strong>
-                        </p>
-                        <pre>{ex.input}</pre>
-                        <p>
-                          <strong>Output:</strong>
-                        </p>
-                        <pre>{ex.output}</pre>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
+
+          <div className="glass-dark rounded-xl flex flex-col">
+            <div className="flex justify-between items-center px-4 pt-2">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="neon-select"
+              >
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                <option value="python">Python</option>
+              </select>
+              <div className="flex gap-2">
+                <button
+                  className="icon-btn"
+                  onClick={beautifyCode}
+                  title="Auto Format"
+                >
+                  <Wand2 size={20} />
+                </button>
+                <button
+                  onClick={() => setShowAiModal(true)}
+                  className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
+                >
+                  AI Code Review
+                </button>
+              </div>
             </div>
+
+            <div className="flex justify-center gap-3 mt-2">
+              <button
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                  runMode === "example"
+                    ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                    : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                }`}
+                onClick={() => setRunMode("example")}
+              >
+                Example Test Cases
+              </button>
+              <button
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                  runMode === "custom"
+                    ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                    : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                }`}
+                onClick={() => setRunMode("custom")}
+              >
+                Custom Input
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-2">
+              <CompilerEditor
+                code={code[language]}
+                setCode={(newCode) =>
+                  setCode((prev) => ({ ...prev, [language]: newCode }))
+                }
+                language={language}
+              />
+              {runMode === "custom" && (
+                <textarea
+                  className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
+                  rows={4}
+                  placeholder="Standard Input..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              )}
+              <OutputBox
+                output={output}
+                runMode={runMode}
+                exampleResults={exampleResults}
+              />
+            </div>
+          </div>
+        </Split>
+
+        <div className="flex justify-center mt-6 gap-4">
+          <button
+            onClick={() =>
+              runMode === "example" ? runExampleTestCases() : handleRun()
+            }
+            disabled={isRunning}
+            className="run-btn flex items-center gap-2 px-6 py-2 text-sm"
+          >
+            {isRunning ? <span className="spinner-white" /> : "Run"}
+          </button>
+
+          {problem && (
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="submit-btn flex items-center gap-2 px-6 py-2 text-sm"
+            >
+              {isSubmitting ? <span className="spinner-white" /> : "Submit"}
+            </button>
           )}
         </div>
 
-        <div className="w-[60%] flex flex-col glass-card rounded-r-xl">
-          <div className="flex justify-between items-center px-4 pt-2">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="bg-[#282846] text-white border border-[#6C00FF] px-3 py-1 rounded text-sm"
-            >
-              <option value="cpp">C++</option>
-              <option value="java">Java</option>
-              <option value="python">Python</option>
-            </select>
-
-            <div className="flex gap-2">
-              <button
-                className="icon-btn"
-                onClick={beautifyCode}
-                title="Auto Format"
-              >
-                <Wand2 size={20} />
-              </button>
-
-              <button
-                className="neon-btn ai-review-btn text-xs py-1 px-3"
-                onClick={() => setShowAiModal(true)}
-              >
-                AI Code Review
-              </button>
-            </div>
+        {feedback && (
+          <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
+            <p className="font-semibold text-sm">❌ Failing Test Case</p>
+            <p>
+              <strong>Input:</strong> {feedback.input}
+            </p>
+            <p>
+              <strong>Expected:</strong> {feedback.expected}
+            </p>
+            <p>
+              <strong>Got:</strong> {feedback.actual}
+            </p>
           </div>
-
-          <div className="flex justify-center gap-4 mt-2">
-            <button
-              className={`px-6 py-2 text-sm font-semibold transition-all duration-300 ${
-                runMode === "example"
-                  ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
-                  : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
-              }`}
-              onClick={() => setRunMode("example")}
-            >
-              Example Test Cases
-            </button>
-            <button
-              className={`px-6 py-2 text-sm font-semibold transition-all duration-300 ${
-                runMode === "custom"
-                  ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
-                  : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
-              }`}
-              onClick={() => setRunMode("custom")}
-            >
-              Custom Input
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-auto p-2">
-            <CompilerEditor
-              code={code[language]}
-              setCode={(newCode) =>
-                setCode((prev) => ({ ...prev, [language]: newCode }))
-              }
-              language={language}
-            />
-            {runMode === "custom" && (
-              <textarea
-                className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
-                rows={4}
-                placeholder="Standard Input..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-            )}
-            <OutputBox
-              output={output}
-              runMode={runMode}
-              exampleResults={exampleResults}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-center mt-6 gap-4">
-        <button
-          onClick={() =>
-            runMode === "example" ? runExampleTestCases() : handleRun()
-          }
-          disabled={isRunning}
-          className="run-btn px-6 py-2 text-sm"
-        >
-          {isRunning ? "Running..." : "Run"}
-        </button>
-
-        {problem && (
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="submit-btn px-6 py-2 text-sm"
-          >
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </button>
         )}
       </div>
 
-      {feedback && (
-        <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
-          <p className="font-semibold text-sm">❌ Failing Test Case</p>
-          <p>
-            <strong>Input:</strong> {feedback.input}
-          </p>
-          <p>
-            <strong>Expected:</strong> {feedback.expected}
-          </p>
-          <p>
-            <strong>Got:</strong> {feedback.actual}
-          </p>
-        </div>
-      )}
-
       <style>{`
-  .neon-run-btn {
-    background: linear-gradient(90deg, #7286ff, #fe7587);
-    border: none;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(255, 117, 135, 0.4);
-  }
+        .split-gutter {
+          background: #999;
+          width: 4px;
+          transition: all 0.2s ease;
+        }
+        .split-gutter:hover {
+          width: 8px;
+          background: linear-gradient(180deg, #7286ff, #fe7587);
+        }
 
-  .neon-run-btn:hover {
-    filter: brightness(1.15);
-    transform: translateY(-1px);
-  }
+        .glass-light {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-  .white-outline-btn {
-    background-color: transparent;
-    color: white;
-    border: 2px solid white;
-    font-weight: 600;
-    border-radius: 0px;
-    transition: all 0.3s ease;
-  }
+        .glass-dark {
+          background: rgba(20, 20, 30, 0.6);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
 
-  .white-outline-btn:hover {
-    background-color: white;
-    color: black;
-  }
+        .run-btn {
+          background: linear-gradient(90deg, #7286ff, #fe7587);
+          border: none;
+          color: white;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          border-radius: 6px;
+        }
 
-  .toggle-btn {
-    font-size: 0.875rem;
-    padding: 0.4rem 1rem;
-    background: #282846;
-    color: white;
-    transition: all 0.2s ease;
-    border: none;
-    font-weight: 500;
-  }
+        .run-btn:hover {
+          filter: brightness(1.15);
+          transform: translateY(-1px);
+        }
 
-  .toggle-btn.active {
-    background: #6C00FF;
-    font-weight: 600;
-  }
+        .submit-btn {
+          background: transparent;
+          color: white;
+          border: 2px solid white;
+          font-weight: 600;
+          border-radius: 6px;
+          transition: all 0.3s ease;
+        }
 
-  .glass-card {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-  }
-  .run-btn {
-  background: linear-gradient(90deg, #7286ff, #fe7587);
-  border: none;
-  color: white;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border-radius: 6px;
-}
+        .submit-btn:hover {
+          background: white;
+          color: black;
+          transform: translateY(-1px);
+        }
 
-.run-btn:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
-}
-
-.submit-btn {
-  background-color: transparent;
-  color: white;
-  border: 2px solid white;
-  font-weight: 600;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.submit-btn:hover {
-  background-color: white;
-  color: black;
-}
-.ai-review-btn {
+        .spinner-white {
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          border-top-color: #fff;
+          border-radius: 50%;
+          width: 16px;
+          height: 16px;
+          animation: spin 0.6s linear infinite;
+        }
+        
+        .ai-review-glow {
   position: relative;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  transform: translate(-20px, 4px);
-  box-shadow:
-    0 0 6px #7286ff,
-    0 0 12px #7286ff,
-    0 0 20px #ff00f2,
-    0 0 30px #ff00f2;
-  animation: glow-pulse 2s infinite ease-in-out;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-}
-
-.ai-review-btn:hover {
-  transform: translate(-15px, 6px) scale(1.03);
-  box-shadow:
-    0 0 8px #7286ff,
-    0 0 16px #7286ff,
-    0 0 24px #ff33ff,
-    0 0 36px #ff33ff;
-}
-
-@keyframes glow-pulse {
-  0% {
-    box-shadow:
-      0 0 6px #7286ff,
-      0 0 12px #7286ff,
-      0 0 20px #ff00f2,
-      0 0 30px #ff00f2;
-  }
-  50% {
-    box-shadow:
-      0 0 10px #33aaff,
-      0 0 18px #33aaff,
-      0 0 30px #ff33ff,
-      0 0 40px #ff33ff;
-  }
-  100% {
-    box-shadow:
-      0 0 6px #7286ff,
-      0 0 12px #7286ff,
-      0 0 20px #ff00f2,
-      0 0 30px #ff00f2;
-  }
-}
-  .icon-btn {
-  background-color: transparent;
+  background: linear-gradient(to right, #7286ff, #fe7587);
+  color: white;
   border: none;
-  padding: 0.4rem;
-  border-radius: 6px;
-  color: white;
-  transition: background 0.2s ease, transform 0.2s ease;
-  transform: translate(-50px, 10px); /* shift left (-X), down (+Y) */
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(114, 134, 255, 0.6),
+              0 0 16px rgba(254, 117, 135, 0.5),
+              0 0 24px rgba(254, 117, 135, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.4s ease;
 }
 
-.icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  transform: translate(-45px, 10px) scale(1.1); /* maintain shift on hover */
-  cursor: pointer;
+.ai-review-glow:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 12px rgba(114, 134, 255, 0.9),
+              0 0 24px rgba(254, 117, 135, 0.6),
+              0 0 36px rgba(254, 117, 135, 0.4);
 }
 
-.gradient-btn {
-  background: linear-gradient(90deg, #7286ff, #fe7587);
+.ai-review-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #7286ff, #fe7587);
+  mask: 
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(4px);
+}
+  .neon-select {
+  background-color: #1c1c2a;
   color: white;
-  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1.5px solid transparent;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='10' height='10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fff' d='M10,50 L70,110 L130,50'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 0.65rem;
   transition: all 0.3s ease;
-  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(114, 134, 255, 0.5), 0 0 14px rgba(254, 117, 135, 0.3);
+}
+
+.neon-select:hover,
+.neon-select:focus {
+  border-color: #7286ff;
+  box-shadow: 0 0 10px #7286ff, 0 0 20px #fe7587;
 }
 
 
-
-`}</style>
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }

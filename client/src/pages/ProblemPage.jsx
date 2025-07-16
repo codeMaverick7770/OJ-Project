@@ -55,22 +55,27 @@ export default function ProblemPage() {
     setLoadingVisual(false);
   };
 
-  if (error) return <div className="p-6 text-red-500 text-center">{error}</div>;
-  if (!problem) return <div className="p-6 text-white text-center">Loading…</div>;
-
   const extractMermaidCode = (diagram) => {
     if (!diagram) return "";
     const match = diagram.match(/```mermaid\s*([\s\S]*?)\s*```/);
     return match ? match[1].trim() : diagram.trim();
   };
 
+  if (error) return <div className="p-6 text-red-500 text-center">{error}</div>;
+  if (!problem) return <div className="p-6 text-white text-center">Loading…</div>;
+
   return (
-    <div className="min-h-screen bg-[#141219] text-white py-20 px-4">
-      <div className="max-w-4xl mx-auto space-y-10">
-        <div className="rounded-xl border border-white/10 p-6 bg-[#1c1a24] shadow-md">
+    <div className="min-h-screen relative text-white">
+      {/* Background image and blur layer */}
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-0" />
+
+      {/* Page content */}
+      <div className="relative z-10 max-w-4xl mx-auto py-20 px-4 space-y-10">
+        <div className="rounded-xl border border-white/10 p-6 bg-white/10 backdrop-blur-md shadow-md">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white">{problem.title}</h1>
           <div className="mt-4 flex flex-wrap gap-3 items-center justify-between">
-            <span className="text-sm bg-[#24222d] text-white px-3 py-1 rounded-full border border-white/10">
+            <span className="text-sm bg-white/10 text-white px-3 py-1 rounded-full border border-white/10">
               Difficulty: {problem.difficulty}
             </span>
             {isAdmin && (
@@ -82,50 +87,52 @@ export default function ProblemPage() {
           </div>
         </div>
 
+        {/* AI tools */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="p-6 bg-[#1c1a24] rounded-xl border border-white/10 shadow-md">
-            <h2 className="text-xl font-semibold mb-2 text-white">🧠 Ask AI to Simplify</h2>
-            <p className="text-sm text-gray-400 mb-4">
+          <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
+            <h2 className="text-xl font-semibold mb-2">🧠 Ask AI to Simplify</h2>
+            <p className="text-sm text-gray-300 mb-4">
               This feature helps break down the problem into simpler language so you can understand it more easily.
             </p>
-            <button onClick={handleVisualSimplify} className="run-btn w-full text-sm px-4 py-2">Try Simplifying</button>
+            <button onClick={handleVisualSimplify} className="run-btn w-50% text-sm px-4 py-2">Try Simplifying</button>
           </div>
 
-          <div className="p-6 bg-[#1c1a24] rounded-xl border border-white/10 shadow-md">
-            <h2 className="text-xl font-semibold mb-2 text-white">🎯 Guess Output</h2>
-            <p className="text-sm text-gray-400 mb-4">
+          <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
+            <h2 className="text-xl font-semibold mb-2">🎯 Guess Output</h2>
+            <p className="text-sm text-gray-300 mb-4">
               The AI will guess the output for a sample input and help you validate your logic.
             </p>
-            <button className="run-btn w-full text-sm px-4 py-2">Try Guessing</button>
+            <button className="run-btn w-50% text-sm px-4 py-2">Try Guessing</button>
           </div>
         </div>
 
-        <div className="p-6 bg-[#1c1a24] rounded-xl border border-white/10 shadow-md space-y-6 text-sm text-white/90 leading-relaxed">
+        {/* Problem details */}
+        <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md space-y-6 text-sm text-white/90 leading-relaxed">
           <div>
-            <h2 className="text-lg font-semibold text-white mb-1">Description</h2>
-            <pre className="bg-[#0f0f1d] border border-white/10 rounded p-4 font-mono text-white/80 whitespace-pre-wrap">
+            <h2 className="text-lg font-semibold mb-1">Description</h2>
+            <pre className="bg-black/40 border border-white/10 rounded p-4 font-mono text-white/80 whitespace-pre-wrap">
               {problem.description}
             </pre>
           </div>
 
           {problem.inputFormat && (
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Input Format</h2>
-              <div className="bg-[#0f0f1d] border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.inputFormat}</div>
+              <h2 className="text-lg font-semibold mb-1">Input Format</h2>
+              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.inputFormat}</div>
             </div>
           )}
 
           {problem.outputFormat && (
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Output Format</h2>
-              <div className="bg-[#0f0f1d] border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.outputFormat}</div>
+              <h2 className="text-lg font-semibold mb-1">Output Format</h2>
+              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.outputFormat}</div>
             </div>
           )}
 
           {problem.constraints?.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Constraints</h2>
-              <div className="bg-[#0f0f1d] border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">
+              <h2 className="text-lg font-semibold mb-1">Constraints</h2>
+              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">
                 {problem.constraints.map((c) => `• ${c}`).join("\n")}
               </div>
             </div>
@@ -133,9 +140,9 @@ export default function ProblemPage() {
 
           {problem.examples?.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Examples</h2>
+              <h2 className="text-lg font-semibold mb-1">Examples</h2>
               {problem.examples.map((ex, idx) => (
-                <div key={idx} className="bg-[#0f0f1d] border border-white/10 rounded p-4 font-mono text-sm mb-4">
+                <div key={idx} className="bg-black/40 border border-white/10 rounded p-4 font-mono text-sm mb-4">
                   <p><span className="text-white font-semibold">Input:</span> {ex.input}</p>
                   <p><span className="text-white font-semibold">Output:</span> {ex.output}</p>
                 </div>
@@ -144,11 +151,13 @@ export default function ProblemPage() {
           )}
         </div>
 
+        {/* Solve now */}
         <div className="flex justify-center">
           <button onClick={() => navigate(`/solve/${id}`)} className="run-btn text-sm px-6 py-3 mt-2">Solve Now</button>
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white text-black p-6 rounded-xl max-w-xl w-full relative max-h-[90vh] overflow-y-auto custom-scroll">

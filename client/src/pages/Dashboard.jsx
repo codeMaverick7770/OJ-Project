@@ -30,37 +30,43 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#141219] text-white relative overflow-hidden">
-      {/* Flare Background */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="flare-bg w-full h-full" />
-      </div>
+    <div className="min-h-screen text-white relative overflow-hidden">
+      {/* 🔳 Background image */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('/assets/background.jpg')` }}
+      />
+      {/* 🔲 Blur overlay */}
+      <div className="absolute inset-0 z-0 backdrop-blur-sm bg-black/30" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 space-y-12">
-        {/* Heading */}
-        <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold gradient-text">
-            Welcome, {user?.name || 'User'} 👋
+      {/* 🌟 Main content */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 space-y-16">
+        {/* 👋 Welcome Heading */}
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Hey, {user?.name || 'User'}!
           </h1>
-          <p className="text-gray-400 mt-2 text-sm md:text-base">Track your progress, stats, and activity</p>
+          <p className="text-gray-300 text-sm md:text-base font-bold">
+            Track your progress, stats, and activity
+          </p>
         </div>
 
-        {/* Stats Section */}
+        {/* 📊 Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard title="Problems Solved" value="27" color="from-green-400 to-emerald-500" />
           <StatCard title="Submissions" value="134" color="from-blue-400 to-sky-500" />
           <StatCard title="Global Rank" value="#1452" color="from-yellow-400 to-orange-500" />
         </div>
 
-        {/* User Info */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-lg shadow-md text-sm space-y-2">
-          <h2 className="text-xl font-semibold mb-2 text-purple-300">Account Info</h2>
+        {/* 👤 Account Info */}
+        <div className="bg-white/5 border border-white/10 p-6 rounded-xl shadow-lg text-sm backdrop-blur-md space-y-2">
+          <h2 className="text-xl font-semibold text-purple-300 mb-3">Account Info</h2>
           <p><span className="text-gray-400">Email:</span> {user.email}</p>
           <p><span className="text-gray-400">Role:</span> {user.role}</p>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 shadow-inner">
+        {/* 📝 Recent Activity */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 shadow-inner backdrop-blur-md">
           <h2 className="text-xl font-semibold mb-4 text-purple-300">📈 Recent Activity</h2>
           <ul className="space-y-3 text-sm">
             <li className="flex items-center gap-2 text-green-400">
@@ -75,7 +81,7 @@ export default function Dashboard() {
           </ul>
         </div>
 
-        {/* Quick Links */}
+        {/* ⚡ Quick Links */}
         <div className="flex flex-wrap gap-4 justify-center mt-10">
           <Link to="/problems" className="neon-btn">Solve Problems</Link>
           <Link to="/compiler" className="neon-btn">Open Compiler</Link>
@@ -83,17 +89,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ✅ Login Success Toast */}
+      {/* ✅ Toast Notification */}
       {showToast && (
-        <div className="fixed top-5 right-5 z-50 bg-white text-black px-6 py-4 rounded-md shadow-lg w-72 animate-fadeIn">
+        <div className="fixed top-5 right-5 z-50 bg-white text-black px-6 py-4 rounded-xl shadow-xl w-72 animate-fadeIn border-l-4 border-green-500">
           <div className="font-semibold mb-1">✅ Logged in successfully</div>
           <div className="w-full h-1 bg-gray-300 mt-2 rounded overflow-hidden">
-            <div className="h-full bg-green-500 animate-progress"></div>
+            <div className="h-full bg-green-500 animate-progress" />
           </div>
         </div>
       )}
 
-      {/* Styles */}
+      {/* 🎨 Styles */}
       <style>
         {`
           .gradient-text {
@@ -116,11 +122,8 @@ export default function Dashboard() {
             background:
               linear-gradient(#2d1d34, #2d1d34) padding-box,
               linear-gradient(90deg, #7286ff, #fe7587) border-box;
-            filter: drop-shadow(0 0 8px rgba(114,134,255,0.4));
-          }
-          .flare-bg {
-            background: radial-gradient(40% 40% at 50% 50%, rgba(210,32,255,0.5) 0%, rgba(210,32,255,0.15) 40%, transparent 80%);
-            filter: blur(80px);
+            filter: drop-shadow(0 0 10px rgba(114,134,255,0.5));
+            transform: scale(1.02);
           }
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
@@ -144,7 +147,7 @@ export default function Dashboard() {
 
 function StatCard({ title, value, color }) {
   return (
-    <div className={`p-6 rounded-lg bg-white/5 border border-white/10 shadow-lg backdrop-blur-md transition hover:shadow-purple-500/30`}>
+    <div className="p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md hover:shadow-purple-500/20 transition-all">
       <h3 className="text-gray-300 text-sm mb-2">{title}</h3>
       <p className={`text-3xl font-bold bg-gradient-to-r ${color} text-transparent bg-clip-text`}>
         {value}
