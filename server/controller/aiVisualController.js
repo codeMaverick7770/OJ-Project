@@ -1,57 +1,57 @@
+import User from '../models/user.js';
 import axios from 'axios';
 import dotenv from 'dotenv';
-dotenv.config();
 
-async function generateSimplifiedText(prompt) {
+dotenv.config();  // Load env vars from .env
+
+export const createSubmission = async (req, res) => {
   try {
-    const response = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        model: 'deepseek/deepseek-r1-0528:free',
-        messages: [
-          {
-            role: 'user',
-            content: `
-You're a friendly coding mentor.
+    console.log("Received submission data:", req.body);
+    const { userId, problemId, code, language } = req.body;
+    
+    if (!userId || !problemId || !code || !language) {
+      console.log("Missing required fields:", { userId, problemId, code, language });
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-Explain the following coding problem in the simplest way possible so that even a beginner can understand it — without revealing the solution or giving away any implementation hints.
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log("User not found:", userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-Keep the explanation short (under 2–3 paragraphs), easy to follow, and free from technical jargon.
+    user.submissionCount = (user.submissionCount || 0) + 1;
+    await user.save();
 
-Problem:
-${prompt}
-            `,
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.VISUAL_AI_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5173',
-          'X-Title': 'kickDSA',
-        },
-      }
-    );
+    const submissionResult = await evaluateSubmission(code, language, problemId);
 
-    return response.data.choices[0]?.message?.content || '⚠️ Explanation not found.';
-  } catch (error) {
-    console.error('[OpenRouter Error]', error?.response?.data || error.message);
-    return '⚠️ Simplified explanation not available.';
-  }
-}
-
-export const simplifyWithVisual = async (req, res) => {
-  const { prompt } = req.body;
-
-  try {
-    const explanation = await generateSimplifiedText(prompt);
-    res.json({ explanation });
-  } catch (error) {
-    console.error('[Simplify Error]', error?.response?.data || error.message);
-    res.status(500).json({
-      error: 'Failed to generate simplified explanation',
-      details: error?.response?.data || error.message,
+    res.status(201).json({ 
+      success: true, 
+      message: 'Submission successful',
+      result: submissionResult
     });
+
+    try {
+      await axios.post(`${process.env.VITE_API_BASE_URL}/leaderboard/update`, {
+        userId,
+        problemId
+      });
+      console.log("Leaderboard update successful");
+    } catch (err) {
+      console.error("Leaderboard update failed:", err?.response?.data || err.message);
+    }
+
+  } catch (err) {
+    console.error("Error creating submission:", err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 };
+
+// Dummy placeholder
+async function evaluateSubmission(code, language, problemId) {
+  return {
+    passed: true,
+    score: 100,
+    executionTime: '0.5s'
+  };
+}
