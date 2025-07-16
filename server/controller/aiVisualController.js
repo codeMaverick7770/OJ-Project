@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Helper function to call OpenRouter API
 async function generateSimplifiedText(prompt) {
   try {
     const response = await axios.post(
@@ -20,7 +21,7 @@ Keep the explanation short (under 2–3 paragraphs), easy to follow, and free fr
 
 Problem:
 ${prompt}
-            `,
+            `.trim(), // ✅ Ensure no unnecessary line breaks
           },
         ],
       },
@@ -28,21 +29,26 @@ ${prompt}
         headers: {
           Authorization: `Bearer ${process.env.VISUAL_AI_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5173',
+          'HTTP-Referer': process.env.ORIGIN || 'http://localhost:5173', // ✅ fallback + flexible
           'X-Title': 'kickDSA',
         },
       }
     );
 
-    return response.data.choices[0]?.message?.content || '⚠️ Explanation not found.';
+    return response.data.choices?.[0]?.message?.content?.trim() || '⚠️ Explanation not found.';
   } catch (error) {
     console.error('[OpenRouter Error]', error?.response?.data || error.message);
     return '⚠️ Simplified explanation not available.';
   }
 }
 
+// Route handler
 export const simplifyWithVisual = async (req, res) => {
   const { prompt } = req.body;
+
+  if (!prompt || typeof prompt !== 'string') {
+    return res.status(400).json({ error: 'Invalid or missing prompt' });
+  }
 
   try {
     const explanation = await generateSimplifiedText(prompt);
