@@ -1,32 +1,36 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-export default async function generateAiResponse(code) {
+export default async function generateAiResponse({ code, level = 1, problem }) {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const prompt = `
-You're a professional coding assistant on a DSA-focused Online Judge platform. 
+    const { title, description, solutionCode = {} } = problem || {};
 
-Your job is to review the submitted code and provide a short, actionable feedback report. 
+    const basePrompt = `
+You're a professional AI mentor for a DSA Online Judge platform.
 
-Guidelines:
-1. Immediately highlight any syntax or logical errors.
-2. Suggest improvements for clarity, formatting, or simplification.
-3. Keep the review concise – no more than 5–7 lines.
-4. Use bullet points if helpful. No unnecessary explanations.
-5. If the code is correct, acknowledge that and offer 1–2 tips for improving code quality.
+Problem: ${title || 'Untitled'}
+Description:
+${description || 'No description'}
 
-Here is the user's code:
-
+User's Code:
 \`\`\`
 ${code}
 \`\`\`
-`;
+    `;
+
+    const promptLevels = {
+      1: `${basePrompt}\nGive a basic beginner-friendly HINT (no solution).`,
+      2: `${basePrompt}\nGive another deeper HINT with logic clarifications.`,
+      3: `${basePrompt}\nGive a logic breakdown or code snippet to help solve it.`,
+      4: `${basePrompt}\nProvide the full solution (and optionally explain it):\n\nOfficial Solution:\n${solutionCode?.cpp || solutionCode?.java || solutionCode?.python || ''}`,
+    };
+
+    const prompt = promptLevels[level] || promptLevels[1];
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

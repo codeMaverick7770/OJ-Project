@@ -27,20 +27,24 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  if (loading) return <div className="text-white text-center">Loading...</div>;
+  if (loading) return <div className="text-white text-center mt-24">Loading...</div>;
 
   return (
-    <div className="min-h-screen px-6 py-16 bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-transparent bg-clip-text">
-          🌟 Global Leaderboard
+    <div className="min-h-screen relative font-sans text-white">
+      {/* Neon background */}
+      <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center z-0" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[6px] z-0" />
+
+      <div className="relative z-10 px-6 py-20 max-w-6xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-12 text-white text-transparent bg-clip-text drop-shadow-[0_0_10px_#7286ff99]">
+          Global Leaderboard
         </h1>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-        <div className="overflow-x-auto border border-white/10 rounded-lg shadow-md bg-white/5 backdrop-blur-md">
+        <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-[0_0_20px_#7286ff40]">
           <table className="min-w-full text-sm md:text-base table-auto">
-            <thead className="bg-white/10 text-left">
+            <thead className="bg-white/10 text-left text-white/80">
               <tr>
                 <th className="p-4 border-b border-white/10">Rank</th>
                 <th className="p-4 border-b border-white/10">User</th>
@@ -55,7 +59,7 @@ export default function LeaderboardPage() {
                   key={`${user.name}-${index}`}
                   className={`${
                     index % 2 === 0 ? "bg-white/5" : "bg-white/10"
-                  } hover:bg-white/20 transition-all`}
+                  } hover:bg-white/20 transition-all duration-200`}
                 >
                   <td className="p-4 font-bold">
                     <span
@@ -78,7 +82,7 @@ export default function LeaderboardPage() {
                         : index + 1}
                     </span>
                   </td>
-                  <td className="p-4 font-medium text-purple-300">
+                  <td className="p-4 font-medium text-purple-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-sm font-bold text-black shadow">
                         {user.name?.[0]?.toUpperCase() || "U"}
@@ -88,7 +92,7 @@ export default function LeaderboardPage() {
                   </td>
                   <td className="p-4">{user.solvedCount ?? 0}</td>
                   <td className="p-4">{user.submissionCount ?? 0}</td>
-                  <td className="p-4">{user.score ?? 0}</td>
+                  <td className="p-4 text-green-300 font-semibold">{user.score ?? 0}</td>
                 </tr>
               ))}
             </tbody>

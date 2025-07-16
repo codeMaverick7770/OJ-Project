@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { Search, Filter, ListFilter } from 'lucide-react';
+
+const sampleTags = ['Array', 'String', 'Math', 'Greedy', 'DP', 'Tree', 'Graph'];
 
 export default function ProblemList() {
   const [problems, setProblems] = useState([]);
   const [search, setSearch] = useState('');
+  const [activeTags, setActiveTags] = useState([]);
   const [error, setError] = useState('');
   const { user } = useAuth();
 
@@ -15,20 +19,28 @@ export default function ProblemList() {
       .catch(() => setError('Failed to fetch problems'));
   }, []);
 
+  const handleTagToggle = (tag) => {
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this problem?')) return;
+
     try {
       const token = localStorage.getItem('token');
-      await API.delete(`/problem/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      setProblems(problems.filter(p => p._id !== id));
-    } catch {
+      await API.delete(`/problem/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setProblems(prev => prev.filter(p => p._id !== id));
+      alert('✅ Problem deleted successfully');
+    } catch (err) {
+      console.error('❌ Delete failed:', err.response?.data || err.message);
       alert('Failed to delete problem');
     }
   };
-
-  const filtered = problems.filter(problem =>
-    problem.title.toLowerCase().includes(search.toLowerCase())
-  );
 
   const difficultyColor = (level) => {
     if (level === 'Easy') return 'text-green-400';
@@ -37,83 +49,130 @@ export default function ProblemList() {
     return 'text-gray-300';
   };
 
+  const filtered = problems.filter(problem => {
+    const matchesSearch = problem.title.toLowerCase().includes(search.toLowerCase());
+    const matchesTag = activeTags.length === 0 || activeTags.some(tag => problem.tags?.includes(tag));
+    return matchesSearch && matchesTag;
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[#0c0c2d] to-black text-white py-20 px-6">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
-          🚀 Practice Problems
+    <div className="min-h-screen relative text-white">
+      {/* Background Image with Blur */}
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-0" />
+
+      {/* Content */}
+      <div className="relative z-10 max-w-6xl mx-auto pt-28 px-4 pb-20 space-y-12">
+        <h2 className="text-5xl font-extrabold text-center text-white text-transparent bg-clip-text drop-shadow-md">
+          Practice Problems
         </h2>
 
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-
-        {/* Search Bar */}
-        <div className="mb-6 flex justify-end">
-          <input
-            type="text"
-            placeholder="Search problems..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 rounded-md bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-400 text-white placeholder:text-gray-400"
-          />
+        {/* Top Buttons */}
+        <div className="flex flex-wrap gap-4 items-center justify-center">
+          <button className="px-4 py-2 rounded-full bg-white/15 border border-white/20 text-sm font-medium hover:bg-white/25 transition">
+            🎯 Beginner Curated
+          </button>
+          <button className="px-4 py-2 rounded-full bg-white/15 border border-white/20 text-sm font-medium hover:bg-white/25 transition">
+            🔥 150 Must Solve
+          </button>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full table-auto border-collapse border border-white/10">
-            <thead className="bg-white/10">
-              <tr>
-                <th className="p-3 border border-white/10 text-left">#</th>
-                <th className="p-3 border border-white/10 text-left">Title</th>
-                <th className="p-3 border border-white/10 text-left">Difficulty</th>
-                {user?.role === 'admin' && <th className="p-3 border border-white/10">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={user?.role === 'admin' ? 4 : 3} className="text-center text-gray-400 py-8">
-                    No problems found.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((problem, idx) => (
-                  <tr
-                    key={problem._id}
-                    className="hover:bg-white/10 transition-all duration-200"
+        {/* Tag Filters */}
+        <div className="flex flex-wrap justify-center gap-2 mt-4">
+          {sampleTags.map(tag => (
+            <button
+              key={tag}
+              onClick={() => handleTagToggle(tag)}
+              className={`px-3 py-1 rounded-full text-sm border transition ${
+                activeTags.includes(tag)
+                  ? 'bg-purple-600 border-purple-400 text-white'
+                  : 'bg-white/15 border-white/20 text-gray-300 hover:bg-purple-800'
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Search + Tools */}
+        <div className="flex flex-wrap justify-between items-center mt-6 gap-3">
+          <div className="flex items-center w-full md:w-[60%] relative">
+            <Search className="absolute left-3 text-white" size={18} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search problems..."
+              className="w-full pl-10 pr-4 py-2 rounded-md bg-white/15 border border-white/20 text-white placeholder:text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button className="p-2 rounded-md bg-white/15 hover:bg-white/25 transition">
+              <ListFilter size={18} />
+            </button>
+            <button className="p-2 rounded-md bg-white/15 hover:bg-white/25 transition">
+              <Filter size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && <p className="text-red-500 text-center">{error}</p>}
+
+        {/* Problem List */}
+        <div className="space-y-3 mt-4">
+          {filtered.length === 0 ? (
+            <p className="text-center text-gray-400 py-12">No problems found.</p>
+          ) : (
+            filtered.map((problem, idx) => (
+              <div
+                key={problem._id}
+                className="flex items-center justify-between bg-white/15 border border-white/15 rounded-lg px-5 py-4 hover:bg-white/20 transition shadow-md backdrop-blur-md"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+                  <span className="text-sm text-gray-400 font-mono">#{idx + 1}</span>
+                  <Link
+                    to={`/problem/${problem._id}`}
+                    className="text-lg font-extrabold bg-gradient-to-r from-purple-300 to-pink-400 bg-clip-text text-transparent hover:underline drop-shadow-md"
                   >
-                    <td className="p-3 border border-white/10">{idx + 1}</td>
-                    <td className="p-3 border border-white/10">
-                      <Link
-                        to={`/problem/${problem._id}`}
-                        className="text-purple-300 font-medium hover:underline"
+                    {problem.title}
+                  </Link>
+                  <div className="flex gap-2 flex-wrap">
+                    {problem.tags?.slice(0, 3).map(tag => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-white/15 px-2 py-1 rounded-full text-gray-300"
                       >
-                        {problem.title}
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <span className={`font-bold text-sm ${difficultyColor(problem.difficulty)}`}>
+                    {problem.difficulty}
+                  </span>
+                  {user?.role === 'admin' && (
+                    <>
+                      <Link
+                        to={`/edit-problem/${problem._id}`}
+                        className="text-sm text-yellow-400 hover:underline"
+                      >
+                        Edit
                       </Link>
-                    </td>
-                    <td className={`p-3 border border-white/10 font-semibold ${difficultyColor(problem.difficulty)}`}>
-                      {problem.difficulty}
-                    </td>
-                    {user?.role === 'admin' && (
-                      <td className="p-3 border border-white/10 flex gap-2 justify-center">
-                        <Link
-                          to={`/edit-problem/${problem._id}`}
-                          className="px-3 py-1 bg-yellow-500 text-black text-sm rounded hover:bg-yellow-600 transition-all"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(problem._id)}
-                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-all"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <button
+                        onClick={() => handleDelete(problem._id)}
+                        className="text-sm text-red-400 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
