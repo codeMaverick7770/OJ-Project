@@ -171,7 +171,7 @@ export default function CompilerPage() {
     try {
       const baseURL = import.meta.env.VITE_COMPILER_BASE_URL;
       const { data } = await axios.post(
-        `${baseURL}/api/ai-review`,
+        `${baseURL}/ai-review`,
         {
           code: code[language],
           problemId: problem._id,
