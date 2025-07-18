@@ -16,15 +16,6 @@ connectDB();
 const app = express();
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://kickdsa.online',
-    'https://www.kickdsa.online',
-    'https://backend.kickdsa.online',
-    'https://www.backend.kickdsa.online',
-    'https://compiler.kickdsa.online',
-    'https://www.compiler.kickdsa.online'
-  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
