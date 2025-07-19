@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import CompilerEditor from "../components/CompilerEditor";
 import OutputBox from "../components/OutputBox";
@@ -10,13 +10,15 @@ import { Wand2 } from "lucide-react";
 import Split from "react-split";
 
 const defaultHelloWorld = {
-  cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << "Hello, World!";\n  return 0;\n}`,
-  java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, World!");\n  }\n}`,
-  python: `print("Hello, World!")`,
+  cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello, World!\";\n  return 0;\n}`,
+  java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello, World!\");\n  }\n}`,
+  python: `print(\"Hello, World!\")`,
 };
 
 export default function CompilerPage() {
+  const location = useLocation();
   const { id } = useParams();
+  const isCompilerOnly = location.pathname === "/compiler";
   const [problem, setProblem] = useState(null);
   const [language, setLanguage] = useState("cpp");
   const [code, setCode] = useState(defaultHelloWorld);
@@ -27,13 +29,13 @@ export default function CompilerPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [runMode, setRunMode] = useState("example");
+  const [runMode, setRunMode] = useState(isCompilerOnly ? "custom" : "example");
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiHelpResponse, setAiHelpResponse] = useState("");
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (id && !isCompilerOnly) {
       API.get(`/problem/${id}`)
         .then((res) => {
           const prob = res.data;
@@ -52,10 +54,10 @@ export default function CompilerPage() {
         })
         .catch(console.error);
     }
-  }, [id]);
+  }, [id, isCompilerOnly]);
 
   const runExampleTestCases = async () => {
-    if (!problem) return;
+    if (!problem || isCompilerOnly) return;
     setRunMode("example");
     setIsRunning(true);
     const results = [];
@@ -107,7 +109,7 @@ export default function CompilerPage() {
   };
 
   const handleSubmit = async () => {
-    if (!problem) return;
+    if (!problem || isCompilerOnly) return;
     setIsSubmitting(true);
     setRunMode("example");
     const userId = localStorage.getItem("userId");
@@ -146,12 +148,26 @@ export default function CompilerPage() {
       setOutput("❌ Failed on a hidden test case. You can request AI help.");
     } else {
       try {
+        // IMPORTANT FIX:
+        // The backend increments submissionCount on submission creation,
+        // but solvedCount only increments if the problem is newly solved.
+        // To ensure solvedCount increments correctly, we must call the leaderboard update endpoint
+        // AFTER successful submission creation, so it can update solvedCount and score properly.
+        // So we call the submission creation API, then call leaderboard update API explicitly here.
+
         await API.post("/submissions", {
           userId,
           problemId: problem._id,
           language,
           code: code[language],
         });
+
+        // Call leaderboard update explicitly to ensure solvedCount increments if needed
+        await API.post("/leaderboard/update", {
+          userId,
+          problemId: problem._id,
+        });
+
         setOutput(
           "🎉 All test cases passed! Your solution has been submitted."
         );
@@ -165,7 +181,7 @@ export default function CompilerPage() {
   };
 
   const handleAiRequest = async (level) => {
-    if (!problem) return;
+    if (!problem || isCompilerOnly) return;
     setIsLoadingAi(true);
     setAiHelpResponse("");
     try {
@@ -235,87 +251,165 @@ export default function CompilerPage() {
       )}
 
       <div className="relative z-10 pt-20 px-4">
-        <Split
-          className="flex h-[80vh]"
-          sizes={[40, 60]}
-          minSize={300}
-          gutterSize={6}
-          gutterAlign="center"
-          cursor="col-resize"
-          gutter={() => {
-            const gutter = document.createElement("div");
-            gutter.className = "split-gutter";
-            return gutter;
-          }}
-        >
-          <div className="glass-dark p-6 overflow-auto rounded-xl text-white/90 text-base custom-scroll border border-[#7286ff]/20 shadow-[0_0_10px_#7286ff33]">
-            {problem && (
-              <>
-                <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-md">
-                  {problem.title}
-                </h2>
-                <section className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-white/70">Description</h3>
-                    <pre className="whitespace-pre-wrap">
-                      {problem.description}
-                    </pre>
-                  </div>
-                  {problem.inputFormat && (
+        {!isCompilerOnly ? (
+          <Split
+            className="flex h-[80vh]"
+            sizes={[40, 60]}
+            minSize={300}
+            gutterSize={6}
+            gutterAlign="center"
+            cursor="col-resize"
+            gutter={() => {
+              const gutter = document.createElement("div");
+              gutter.className = "split-gutter";
+              return gutter;
+            }}
+          >
+            <div className="glass-dark p-6 overflow-auto rounded-xl text-white/90 text-base custom-scroll border border-[#7286ff]/20 shadow-[0_0_10px_#7286ff33]">
+              {problem && (
+                <>
+                  <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-md">
+                    {problem.title}
+                  </h2>
+                  <section className="space-y-4">
                     <div>
-                      <h3 className="font-semibold text-white/70">
-                        Input Format
-                      </h3>
+                      <h3 className="font-semibold text-white/70">Description</h3>
                       <pre className="whitespace-pre-wrap">
-                        {problem.inputFormat}
+                        {problem.description}
                       </pre>
                     </div>
-                  )}
-                  {problem.outputFormat && (
-                    <div>
-                      <h3 className="font-semibold text-white/70">
-                        Output Format
-                      </h3>
-                      <pre className="whitespace-pre-wrap">
-                        {problem.outputFormat}
-                      </pre>
-                    </div>
-                  )}
-                  {problem.constraints?.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-white/70">
-                        Constraints
-                      </h3>
-                      <ul className="list-disc list-inside">
-                        {problem.constraints.map((line, idx) => (
-                          <li key={idx}>{line}</li>
+                    {problem.inputFormat && (
+                      <div>
+                        <h3 className="font-semibold text-white/70">
+                          Input Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.inputFormat}
+                        </pre>
+                      </div>
+                    )}
+                    {problem.outputFormat && (
+                      <div>
+                        <h3 className="font-semibold text-white/70">
+                          Output Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.outputFormat}
+                        </pre>
+                      </div>
+                    )}
+                    {problem.constraints?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-white/70">
+                          Constraints
+                        </h3>
+                        <ul className="list-disc list-inside">
+                          {problem.constraints.map((line, idx) => (
+                            <li key={idx}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {problem.examples?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-white/70">Examples</h3>
+                        {problem.examples.map((ex, idx) => (
+                          <div key={idx} className="mb-2">
+                            <p>
+                              <strong>Input:</strong>
+                            </p>
+                            <pre>{ex.input}</pre>
+                            <p>
+                              <strong>Output:</strong>
+                            </p>
+                            <pre>{ex.output}</pre>
+                          </div>
                         ))}
-                      </ul>
-                    </div>
-                  )}
-                  {problem.examples?.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-white/70">Examples</h3>
-                      {problem.examples.map((ex, idx) => (
-                        <div key={idx} className="mb-2">
-                          <p>
-                            <strong>Input:</strong>
-                          </p>
-                          <pre>{ex.input}</pre>
-                          <p>
-                            <strong>Output:</strong>
-                          </p>
-                          <pre>{ex.output}</pre>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              </>
-            )}
-          </div>
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
+            </div>
 
-          <div className="glass-dark rounded-xl flex flex-col">
+            <div className="glass-dark rounded-xl flex flex-col">
+              <div className="flex justify-between items-center px-4 pt-2">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="neon-select"
+                >
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                </select>
+                <div className="flex gap-2">
+                  <button
+                    className="icon-btn"
+                    onClick={beautifyCode}
+                    title="Auto Format"
+                  >
+                    <Wand2 size={20} />
+                  </button>
+                  <button
+                    onClick={() => setShowAiModal(true)}
+                    className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
+                  >
+                    AI Code Review
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-3 mt-2">
+                <button
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    runMode === "example"
+                      ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                      : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                  }`}
+                  onClick={() => setRunMode("example")}
+                >
+                  Example Test Cases
+                </button>
+                <button
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    runMode === "custom"
+                      ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                      : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                  }`}
+                  onClick={() => setRunMode("custom")}
+                >
+                  Custom Input
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto p-2">
+                <CompilerEditor
+                  code={code[language]}
+                  setCode={(newCode) =>
+                    setCode((prev) => ({ ...prev, [language]: newCode }))
+                  }
+                  language={language}
+                />
+                {runMode === "custom" && (
+                  <textarea
+                    className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
+                    rows={4}
+                    placeholder="Standard Input..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                  />
+                )}
+                <OutputBox
+                  output={output}
+                  runMode={runMode}
+                  exampleResults={exampleResults}
+                />
+              </div>
+            </div>
+          </Split>
+        ) : (
+          <div className="glass-dark rounded-xl flex flex-col h-[80vh]">
             <div className="flex justify-between items-center px-4 pt-2">
               <select
                 value={language}
@@ -334,38 +428,8 @@ export default function CompilerPage() {
                 >
                   <Wand2 size={20} />
                 </button>
-                <button
-                  onClick={() => setShowAiModal(true)}
-                  className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
-                >
-                  AI Code Review
-                </button>
               </div>
             </div>
-
-            <div className="flex justify-center gap-3 mt-2">
-              <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
-                  runMode === "example"
-                    ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
-                    : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
-                }`}
-                onClick={() => setRunMode("example")}
-              >
-                Example Test Cases
-              </button>
-              <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
-                  runMode === "custom"
-                    ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
-                    : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
-                }`}
-                onClick={() => setRunMode("custom")}
-              >
-                Custom Input
-              </button>
-            </div>
-
             <div className="flex-1 overflow-auto p-2">
               <CompilerEditor
                 code={code[language]}
@@ -374,15 +438,13 @@ export default function CompilerPage() {
                 }
                 language={language}
               />
-              {runMode === "custom" && (
-                <textarea
-                  className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
-                  rows={4}
-                  placeholder="Standard Input..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                />
-              )}
+              <textarea
+                className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
+                rows={4}
+                placeholder="Standard Input..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
               <OutputBox
                 output={output}
                 runMode={runMode}
@@ -390,20 +452,18 @@ export default function CompilerPage() {
               />
             </div>
           </div>
-        </Split>
+        )}
 
         <div className="flex justify-center mt-6 gap-4">
           <button
-            onClick={() =>
-              runMode === "example" ? runExampleTestCases() : handleRun()
-            }
+            onClick={isCompilerOnly ? handleRun : (runMode === "example" ? runExampleTestCases : handleRun)}
             disabled={isRunning}
             className="run-btn flex items-center gap-2 px-6 py-2 text-sm"
           >
             {isRunning ? <span className="spinner-white" /> : "Run"}
           </button>
 
-          {problem && (
+          {!isCompilerOnly && problem && (
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
@@ -414,7 +474,7 @@ export default function CompilerPage() {
           )}
         </div>
 
-        {feedback && (
+        {!isCompilerOnly && feedback && (
           <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
             <p className="font-semibold text-sm">❌ Failing Test Case</p>
             <p>
@@ -430,7 +490,7 @@ export default function CompilerPage() {
         )}
       </div>
 
-      <style>{`
+      <style jsx>{`
         .split-gutter {
           background: #999;
           width: 4px;
@@ -490,65 +550,65 @@ export default function CompilerPage() {
           height: 16px;
           animation: spin 0.6s linear infinite;
         }
-        
+
         .ai-review-glow {
-  position: relative;
-  background: linear-gradient(to right, #7286ff, #fe7587);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 0 8px rgba(114, 134, 255, 0.6),
-              0 0 16px rgba(254, 117, 135, 0.5),
-              0 0 24px rgba(254, 117, 135, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.4s ease;
-}
+          position: relative;
+          background: linear-gradient(to right, #7286ff, #fe7587);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          box-shadow: 0 0 8px rgba(114, 134, 255, 0.6),
+                      0 0 16px rgba(254, 117, 135, 0.5),
+                      0 0 24px rgba(254, 117, 135, 0.3);
+          transition: transform 0.3s ease, box-shadow 0.4s ease;
+        }
 
-.ai-review-glow:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 0 12px rgba(114, 134, 255, 0.9),
-              0 0 24px rgba(254, 117, 135, 0.6),
-              0 0 36px rgba(254, 117, 135, 0.4);
-}
+        .ai-review-glow:hover {
+          transform: translateY(-2px) scale(1.03);
+          box-shadow: 0 0 12px rgba(114, 134, 255, 0.9),
+                      0 0 24px rgba(254, 117, 135, 0.6),
+                      0 0 36px rgba(254, 117, 135, 0.4);
+        }
 
-.ai-review-glow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(135deg, #7286ff, #fe7587);
-  mask: 
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(4px);
-}
-  .neon-select {
-  background-color: #1c1c2a;
-  color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1.5px solid transparent;
-  outline: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='10' height='10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fff' d='M10,50 L70,110 L130,50'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.6rem center;
-  background-size: 0.65rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 8px rgba(114, 134, 255, 0.5), 0 0 14px rgba(254, 117, 135, 0.3);
-}
+        .ai-review-glow::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 2px;
+          background: linear-gradient(135deg, #7286ff, #fe7587);
+          mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          pointer-events: none;
+          z-index: -1;
+          filter: blur(4px);
+        }
 
-.neon-select:hover,
-.neon-select:focus {
-  border-color: #7286ff;
-  box-shadow: 0 0 10px #7286ff, 0 0 20px #fe7587;
-}
+        .neon-select {
+          background-color: #1c1c2a;
+          color: white;
+          padding: 6px 14px;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          border: 1.5px solid transparent;
+          outline: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='10' height='10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fff' d='M10,50 L70,110 L130,50'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.6rem center;
+          background-size: 0.65rem;
+          transition: all 0.3s ease;
+          box-shadow: 0 0 8px rgba(114, 134, 255, 0.5), 0 0 14px rgba(254, 117, 135, 0.3);
+        }
 
+        .neon-select:hover,
+        .neon-select:focus {
+          border-color: #7286ff;
+          box-shadow: 0 0 10px #7286ff, 0 0 20px #fe7587;
+        }
 
         @keyframes spin {
           to {

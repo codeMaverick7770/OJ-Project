@@ -10,6 +10,7 @@ import leaderboardRoutes from './routes/leaderboard.js';
 import submissionRoutes from './routes/submissionRoutes.js';
 import { PORT } from './config/config.js';
 import aiVisualRoutes from './routes/aiVisualRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 connectDB();
 
@@ -39,7 +40,7 @@ app.use('/api/ai-review', aiRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/visual-ai', aiVisualRoutes);
-
+app.use('/api/user', userRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);

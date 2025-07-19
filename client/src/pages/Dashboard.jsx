@@ -1,17 +1,50 @@
 import { useEffect, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) setUser(JSON.parse(storedUser));
-    setLoading(false);
-  }, []);
+    async function fetchStats() {
+      try {
+        const token = localStorage.getItem('token'); // 🛡️ JWT token from login
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/user/dashboard-stats`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            // ⛔ Unauthorized
+            localStorage.removeItem('token');
+            navigate('/login');
+          } else {
+            throw new Error('Failed to fetch');
+          }
+        }
+
+        const data = await res.json();
+        setUser(data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, [navigate]);
 
   useEffect(() => {
     if (location.state?.showLoginSuccess) {
@@ -36,10 +69,8 @@ export default function Dashboard() {
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('/assets/background.jpg')` }}
       />
-      {/* 🔲 Blur overlay */}
       <div className="absolute inset-0 z-0 backdrop-blur-sm bg-black/30" />
 
-      {/* 🌟 Main content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 space-y-16">
         {/* 👋 Welcome Heading */}
         <div className="text-center space-y-2">
@@ -53,19 +84,19 @@ export default function Dashboard() {
 
         {/* 📊 Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard title="Problems Solved" value="27" color="from-green-400 to-emerald-500" />
-          <StatCard title="Submissions" value="134" color="from-blue-400 to-sky-500" />
-          <StatCard title="Global Rank" value="#1452" color="from-yellow-400 to-orange-500" />
+          <StatCard title="Problems Solved" value={user?.solvedCount || 0} color="from-green-400 to-emerald-500" />
+          <StatCard title="Submissions" value={user?.submissionCount || 0} color="from-blue-400 to-sky-500" />
+          <StatCard title="Global Rank" value={`#${user?.rank || '-'}`} color="from-yellow-400 to-orange-500" />
         </div>
 
         {/* 👤 Account Info */}
         <div className="bg-white/5 border border-white/10 p-6 rounded-xl shadow-lg text-sm backdrop-blur-md space-y-2">
           <h2 className="text-xl font-semibold text-purple-300 mb-3">Account Info</h2>
-          <p><span className="text-gray-400">Email:</span> {user.email}</p>
-          <p><span className="text-gray-400">Role:</span> {user.role}</p>
+          <p><span className="text-gray-400">Email:</span> {user?.email}</p>
+          <p><span className="text-gray-400">Role:</span> {user?.role}</p>
         </div>
 
-        {/* 📝 Recent Activity */}
+        {/* 📝 Recent Activity (Static for now) */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-6 shadow-inner backdrop-blur-md">
           <h2 className="text-xl font-semibold mb-4 text-purple-300">📈 Recent Activity</h2>
           <ul className="space-y-3 text-sm">

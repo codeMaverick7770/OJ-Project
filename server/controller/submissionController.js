@@ -20,8 +20,6 @@ export const createSubmission = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    user.submissionCount = (user.submissionCount || 0) + 1;
-    await user.save();
 
     const submissionResult = await evaluateSubmission(code, language, problemId);
 
