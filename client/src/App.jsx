@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
 import API from './services/api';
 import ProblemList from './pages/ProblemList';
+import AiAssistant from './components/AiAssistant';
 
 function App() {
   useEffect(() => {
@@ -18,6 +19,7 @@ function App() {
       <Navbar />
       <AppRoutes />
       <Footer />
+      <AiAssistant />
     </Router>
   );
 }

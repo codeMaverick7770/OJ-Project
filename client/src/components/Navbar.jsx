@@ -98,6 +98,7 @@ export default function Navbar() {
               { label: "Problems", to: "/problems" },
               { label: "Compiler", to: "/compiler" },
               { label: "Leaderboard", to: "/leaderboard" },
+              { label: "Path Explorer", to: "/path-explorer" },
             ].map((item) => (
               <li key={item.to}>
                 <Link
@@ -182,6 +183,8 @@ export default function Navbar() {
               <li><Link to="/problems" className="py-2 hover:bg-white/10">Problems</Link></li>
               <li><Link to="/compiler" className="py-2 hover:bg-white/10">Compiler</Link></li>
               <li><Link to="/leaderboard" className="py-2 hover:bg-white/10">Leaderboard</Link></li>
+              <li><Link to="/path-explorer" className="py-2 hover:bg-white/10">Path Explorer</Link></li>
+
               {user?.role === "admin" && (
                 <li><Link to="/create-problem" className="py-2 hover:bg-white/10">Create Problem</Link></li>
               )}

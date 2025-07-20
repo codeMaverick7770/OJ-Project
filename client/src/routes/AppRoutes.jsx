@@ -11,6 +11,7 @@ import ProblemPage from '../pages/ProblemPage';
 import EditProblem from '../pages/EditProblem';
 import CompilerPage from '../pages/CompilerPage';
 import LeaderboardPage from '../pages/leaderboardPage';
+import PathExplorer from '../pages/PathExplorer';
 
 export default function AppRoutes() {
   return (
@@ -25,6 +26,8 @@ export default function AppRoutes() {
       <Route path="/compiler" element={<CompilerPage />} />
       <Route path="/solve/:id" element={<CompilerPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} /> 
+      <Route path="/path-explorer" element={<PathExplorer />} />
+      
     </Routes>
   );
 }
