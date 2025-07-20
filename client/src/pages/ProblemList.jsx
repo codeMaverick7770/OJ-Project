@@ -57,22 +57,22 @@ export default function ProblemList() {
 
   return (
     <div className="min-h-screen relative text-white">
-      {/* Background Image with Blur */}
+      {/* Background Image with Stronger Blur and Dark Overlay */}
       <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-0" />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0" />
 
       {/* Content */}
       <div className="relative z-10 max-w-6xl mx-auto pt-28 px-4 pb-20 space-y-12">
-        <h2 className="text-5xl font-extrabold text-center text-white text-transparent bg-clip-text drop-shadow-md">
+        <h2 className="text-5xl font-extrabold text-center text-transparent bg-clip-text text-white drop-shadow-lg">
           Practice Problems
         </h2>
 
         {/* Top Buttons */}
         <div className="flex flex-wrap gap-4 items-center justify-center">
-          <button className="px-4 py-2 rounded-full bg-white/15 border border-white/20 text-sm font-medium hover:bg-white/25 transition">
+          <button className="px-4 py-2 rounded-full bg-black/10 border border-white/20 text-sm font-medium hover:bg-white/20 transition">
             🎯 Beginner Curated
           </button>
-          <button className="px-4 py-2 rounded-full bg-white/15 border border-white/20 text-sm font-medium hover:bg-white/25 transition">
+          <button className="px-4 py-2 rounded-full bg-black/10 border border-white/20 text-sm font-medium hover:bg-white/20 transition">
             🔥 150 Must Solve
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function ProblemList() {
               className={`px-3 py-1 rounded-full text-sm border transition ${
                 activeTags.includes(tag)
                   ? 'bg-purple-600 border-purple-400 text-white'
-                  : 'bg-white/15 border-white/20 text-gray-300 hover:bg-purple-800'
+                  : 'bg-white/10 border-black/10 text-gray-300 hover:bg-purple-700'
               }`}
             >
               {tag}
@@ -103,14 +103,14 @@ export default function ProblemList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search problems..."
-              className="w-full pl-10 pr-4 py-2 rounded-md bg-white/15 border border-white/20 text-white placeholder:text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+              className="w-full pl-10 pr-4 py-2 rounded-md bg-black/10 border border-white/20 text-white placeholder:text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
             />
           </div>
           <div className="flex gap-3">
-            <button className="p-2 rounded-md bg-white/15 hover:bg-white/25 transition">
+            <button className="p-2 rounded-md bg-white/10 hover:bg-white/20 transition">
               <ListFilter size={18} />
             </button>
-            <button className="p-2 rounded-md bg-white/15 hover:bg-white/25 transition">
+            <button className="p-2 rounded-md bg-white/10 hover:bg-white/20 transition">
               <Filter size={18} />
             </button>
           </div>
@@ -127,7 +127,7 @@ export default function ProblemList() {
             filtered.map((problem, idx) => (
               <div
                 key={problem._id}
-                className="flex items-center justify-between bg-white/15 border border-white/15 rounded-lg px-5 py-4 hover:bg-white/20 transition shadow-md backdrop-blur-md"
+                className="flex items-center justify-between bg-black/10 border border-white/15 rounded-lg px-5 py-4 hover:bg-white/5 transition shadow-md backdrop-blur-md"
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
                   <span className="text-sm text-gray-400 font-mono">#{idx + 1}</span>
@@ -141,7 +141,7 @@ export default function ProblemList() {
                     {problem.tags?.slice(0, 3).map(tag => (
                       <span
                         key={tag}
-                        className="text-xs bg-white/15 px-2 py-1 rounded-full text-gray-300"
+                        className="text-xs bg-white/5 px-2 py-1 rounded-full text-gray-200"
                       >
                         {tag}
                       </span>

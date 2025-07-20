@@ -33,7 +33,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen relative font-sans text-white">
       {/* Neon background */}
       <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center z-0" />
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-[6px] z-0" />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-[6px] z-0" />
 
       <div className="relative z-10 px-6 py-20 max-w-6xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-12 text-white text-transparent bg-clip-text drop-shadow-[0_0_10px_#7286ff99]">
@@ -42,7 +42,7 @@ export default function LeaderboardPage() {
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-[0_0_20px_#7286ff40]">
+        <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/10 backdrop-blur-lg shadow-[0_0_20px_#7286ff40]">
           <table className="min-w-full text-sm md:text-base table-auto">
             <thead className="bg-white/10 text-left text-white/80">
               <tr>

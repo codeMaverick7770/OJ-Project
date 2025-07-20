@@ -69,7 +69,7 @@ export default function Dashboard() {
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('/assets/background.jpg')` }}
       />
-      <div className="absolute inset-0 z-0 backdrop-blur-sm bg-black/30" />
+      <div className="absolute inset-0 z-0 backdrop-blur-sm bg-black/60" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 space-y-16">
         {/* 👋 Welcome Heading */}
@@ -90,14 +90,14 @@ export default function Dashboard() {
         </div>
 
         {/* 👤 Account Info */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-xl shadow-lg text-sm backdrop-blur-md space-y-2">
+        <div className="bg-black/40 border border-white/10 p-6 rounded-xl shadow-lg text-sm backdrop-blur-md space-y-2">
           <h2 className="text-xl font-semibold text-purple-300 mb-3">Account Info</h2>
           <p><span className="text-gray-400">Email:</span> {user?.email}</p>
           <p><span className="text-gray-400">Role:</span> {user?.role}</p>
         </div>
 
         {/* 📝 Recent Activity (Static for now) */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 shadow-inner backdrop-blur-md">
+        <div className="bg-black/40 border border-white/10 rounded-xl p-6 shadow-inner backdrop-blur-md">
           <h2 className="text-xl font-semibold mb-4 text-purple-300">📈 Recent Activity</h2>
           <ul className="space-y-3 text-sm">
             <li className="flex items-center gap-2 text-green-400">
@@ -178,7 +178,7 @@ export default function Dashboard() {
 
 function StatCard({ title, value, color }) {
   return (
-    <div className="p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md hover:shadow-purple-500/20 transition-all">
+    <div className="p-6 rounded-xl bg-black/40 border border-white/10 shadow-lg backdrop-blur-md hover:shadow-purple-500/20 transition-all">
       <h3 className="text-gray-300 text-sm mb-2">{title}</h3>
       <p className={`text-3xl font-bold bg-gradient-to-r ${color} text-transparent bg-clip-text`}>
         {value}

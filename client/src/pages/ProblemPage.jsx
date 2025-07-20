@@ -68,14 +68,14 @@ export default function ProblemPage() {
     <div className="min-h-screen relative text-white">
       {/* Background image and blur layer */}
       <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-0" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-0" />
 
       {/* Page content */}
       <div className="relative z-10 max-w-4xl mx-auto py-20 px-4 space-y-10">
-        <div className="rounded-xl border border-white/10 p-6 bg-white/10 backdrop-blur-md shadow-md">
+        <div className="rounded-xl border border-white/10 p-6 bg-black/40 backdrop-blur-md shadow-md">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white">{problem.title}</h1>
           <div className="mt-4 flex flex-wrap gap-3 items-center justify-between">
-            <span className="text-sm bg-white/10 text-white px-3 py-1 rounded-full border border-white/10">
+            <span className="text-sm bg-black/40 text-white px-3 py-1 rounded-full border border-white/10">
               Difficulty: {problem.difficulty}
             </span>
             {isAdmin && (
@@ -89,7 +89,7 @@ export default function ProblemPage() {
 
         {/* AI tools */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
+          <div className="p-6 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
             <h2 className="text-xl font-semibold mb-2">🧠 Ask AI to Simplify</h2>
             <p className="text-sm text-gray-300 mb-4">
               This feature helps break down the problem into simpler language so you can understand it more easily.
@@ -97,7 +97,7 @@ export default function ProblemPage() {
             <button onClick={handleVisualSimplify} className="run-btn w-50% text-sm px-4 py-2">Try Simplifying</button>
           </div>
 
-          <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
+          <div className="p-6 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
             <h2 className="text-xl font-semibold mb-2">🎯 Guess Output</h2>
             <p className="text-sm text-gray-300 mb-4">
               The AI will guess the output for a sample input and help you validate your logic.
@@ -107,7 +107,7 @@ export default function ProblemPage() {
         </div>
 
         {/* Problem details */}
-        <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 shadow-md space-y-6 text-sm text-white/90 leading-relaxed">
+        <div className="p-6 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-md space-y-6 text-sm text-white/90 leading-relaxed">
           <div>
             <h2 className="text-lg font-semibold mb-1">Description</h2>
             <pre className="bg-black/40 border border-white/10 rounded p-4 font-mono text-white/80 whitespace-pre-wrap">
