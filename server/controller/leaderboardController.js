@@ -1,5 +1,6 @@
 import User from '../models/user.js';
 import Problem from '../models/problem.js';
+import redisClient from '../utils/redisClient.js';
 
 const difficultyPoints = {
   Easy: 10,
@@ -42,6 +43,9 @@ export const updateLeaderboard = async (req, res) => {
 
     await user.save();
 
+    // Invalidate cached leaderboard after update
+    await redisClient.del('leaderboard');
+
     res.json({ message: 'Leaderboard updated successfully' });
   } catch (err) {
     console.error("Error updating leaderboard:", err);
@@ -51,6 +55,13 @@ export const updateLeaderboard = async (req, res) => {
 
 export const getLeaderboard = async (req, res) => {
   try {
+    // Try fetching from Redis cache
+    const cachedLeaderboard = await redisClient.get('leaderboard');
+
+    if (cachedLeaderboard) {
+      return res.json(JSON.parse(cachedLeaderboard));
+    }
+
     const users = await User.find()
       .select('name score solvedProblems submissionCount')
       .sort({ score: -1, name: 1 })
@@ -62,6 +73,11 @@ export const getLeaderboard = async (req, res) => {
       submissionCount: user.submissionCount || 0,
       score: user.score || 0
     }));
+
+    // Cache the result for 60 seconds
+    await redisClient.set('leaderboard', JSON.stringify(leaderboardData), {
+      EX: 60,
+    });
 
     res.json(leaderboardData);
   } catch (err) {

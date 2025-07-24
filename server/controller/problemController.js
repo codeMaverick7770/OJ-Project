@@ -1,4 +1,5 @@
 import Problem from '../models/problem.js';
+import redisClient from '../utils/redisClient.js'; // adjust path if needed
 
 // Admin: Create problem
 export const createProblem = async (req, res) => {
@@ -22,6 +23,8 @@ export const createProblem = async (req, res) => {
       solutionCode,
       createdBy: req.user.id,
     });
+
+    await redisClient.del('all_problems'); // Invalidate cache
 
     console.log('✅ Created:', problem.title);
     res.status(201).json({ message: 'Problem created successfully', problem });
@@ -50,6 +53,7 @@ export const bulkCreateProblems = async (req, res) => {
     }));
 
     const result = await Problem.insertMany(enrichedProblems);
+    await redisClient.del('all_problems'); // Invalidate cache
     res.status(201).json({ message: `${result.length} problems added.` });
   } catch (err) {
     console.error('❌ Bulk create failed:', err.message);
@@ -57,11 +61,18 @@ export const bulkCreateProblems = async (req, res) => {
   }
 };
 
-
-// Public: Fetch all problems
+// Public: Fetch all problems (with Redis cache)
 export const getAllProblems = async (req, res) => {
   try {
+    const cached = await redisClient.get('all_problems');
+    if (cached) {
+      console.log('📦 Served from Redis: all_problems');
+      return res.status(200).json({ problems: JSON.parse(cached) });
+    }
+
     const problems = await Problem.find().sort({ createdAt: -1 });
+    await redisClient.set('all_problems', JSON.stringify(problems), { EX: 300 }); // Cache for 5 mins
+
     res.status(200).json({ problems });
   } catch (err) {
     console.error('❌ Fetching all problems failed:', err.message);
@@ -69,11 +80,20 @@ export const getAllProblems = async (req, res) => {
   }
 };
 
-// Public: Fetch single problem
+// Public: Fetch single problem (with Redis cache)
 export const getSingleProblem = async (req, res) => {
+  const key = `problem:${req.params.id}`;
   try {
+    const cached = await redisClient.get(key);
+    if (cached) {
+      console.log(`📦 Served from Redis: ${key}`);
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: 'Problem not found' });
+
+    await redisClient.set(key, JSON.stringify(problem), { EX: 300 }); // Cache 5 mins
     res.status(200).json(problem);
   } catch (err) {
     console.error('❌ Fetch single problem failed:', err.message);
@@ -88,7 +108,12 @@ export const deleteProblem = async (req, res) => {
   }
 
   try {
-    await Problem.findByIdAndDelete(req.params.id);
+    const deleted = await Problem.findByIdAndDelete(req.params.id);
+    if (deleted) {
+      await redisClient.del('all_problems'); // Invalidate cache
+      await redisClient.del(`problem:${req.params.id}`);
+    }
+
     res.status(200).json({ message: 'Problem deleted successfully' });
   } catch (err) {
     console.error('❌ Deleting problem failed:', err.message);
