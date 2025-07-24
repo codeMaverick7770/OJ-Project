@@ -4,8 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
 import API from './services/api';
-import ProblemList from './pages/ProblemList';
-import AiAssistant from './components/AiAssistant';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   useEffect(() => {
@@ -19,9 +18,19 @@ function App() {
       <Navbar />
       <AppRoutes />
       <Footer />
-      <AiAssistant />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1f1f1f',
+            color: '#fff',
+            border: '1px solid #3b3b3b',
+          },
+        }}
+      />
     </Router>
   );
 }
 
-export default App; // ✅ This line is necessary!
+export default App;

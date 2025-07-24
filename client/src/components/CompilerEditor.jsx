@@ -1,6 +1,10 @@
 import Editor from "@monaco-editor/react";
+import { useRef, useEffect } from "react";
 
-const CompilerEditor = ({ code, setCode, language = "javascript" }) => {
+const CompilerEditor = ({ code, setCode, language = "javascript", markers = [] }) => {
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
+
   const handleEditorChange = (value) => {
     if (typeof value === "string") {
       setCode(value);
@@ -8,16 +12,17 @@ const CompilerEditor = ({ code, setCode, language = "javascript" }) => {
   };
 
   const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+
     monaco.editor.defineTheme("transparent-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [],
       colors: {
-        "editor.background": "#00000000", // Fully transparent
+        "editor.background": "#00000000",
         "editorLineNumber.foreground": "#888888",
         "editor.foreground": "#ffffff",
-
-        // Remove borders/focus rings
         "focusBorder": "#00000000",
         "input.border": "#00000000",
         "dropdown.border": "#00000000",
@@ -31,7 +36,19 @@ const CompilerEditor = ({ code, setCode, language = "javascript" }) => {
     });
 
     monaco.editor.setTheme("transparent-dark");
+
+    if (markers.length > 0) {
+      const model = editor.getModel();
+      monaco.editor.setModelMarkers(model, "owner", markers);
+    }
   };
+
+  useEffect(() => {
+    if (monacoRef.current && editorRef.current) {
+      const model = editorRef.current.getModel();
+      monacoRef.current.editor.setModelMarkers(model, "owner", markers);
+    }
+  }, [markers]);
 
   return (
     <div className="h-[400px] rounded-lg overflow-hidden w-full">

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../services/api";
-
+import Lottie from "lottie-react";
+import aiLoader from "../assets/AiLoader.json";
 export default function ProblemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,7 +27,8 @@ export default function ProblemPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this problem?")) return;
+    if (!window.confirm("Are you sure you want to delete this problem?"))
+      return;
     try {
       const token = localStorage.getItem("token");
       await API.delete(`/problem/${id}`, {
@@ -62,26 +64,42 @@ export default function ProblemPage() {
   };
 
   if (error) return <div className="p-6 text-red-500 text-center">{error}</div>;
-  if (!problem) return <div className="p-6 text-white text-center">Loading…</div>;
+  if (!problem)
+    return <div className="p-6 text-white text-center">Loading…</div>;
 
   return (
     <div className="min-h-screen relative text-white">
       {/* Background image and blur layer */}
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{ backgroundImage: `url('/assets/background.jpg')` }}
+      />
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-0" />
 
       {/* Page content */}
       <div className="relative z-10 max-w-4xl mx-auto py-20 px-4 space-y-10">
         <div className="rounded-xl border border-white/10 p-6 bg-black/40 backdrop-blur-md shadow-md">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white">{problem.title}</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white">
+            {problem.title}
+          </h1>
           <div className="mt-4 flex flex-wrap gap-3 items-center justify-between">
             <span className="text-sm bg-black/40 text-white px-3 py-1 rounded-full border border-white/10">
               Difficulty: {problem.difficulty}
             </span>
             {isAdmin && (
               <div className="flex gap-3">
-                <button onClick={() => navigate(`/edit-problem/${id}`)} className="run-btn text-xs px-4 py-2">Edit</button>
-                <button onClick={handleDelete} className="run-btn text-xs px-4 py-2">Delete</button>
+                <button
+                  onClick={() => navigate(`/edit-problem/${id}`)}
+                  className="run-btn text-xs px-4 py-2"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="run-btn text-xs px-4 py-2"
+                >
+                  Delete
+                </button>
               </div>
             )}
           </div>
@@ -90,19 +108,30 @@ export default function ProblemPage() {
         {/* AI tools */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="p-6 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
-            <h2 className="text-xl font-semibold mb-2">🧠 Ask AI to Simplify</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              🧠 Ask AI to Simplify
+            </h2>
             <p className="text-sm text-gray-300 mb-4">
-              This feature helps break down the problem into simpler language so you can understand it more easily.
+              This feature helps break down the problem into simpler language so
+              you can understand it more easily.
             </p>
-            <button onClick={handleVisualSimplify} className="run-btn w-50% text-sm px-4 py-2">Try Simplifying</button>
+            <button
+              onClick={handleVisualSimplify}
+              className="run-btn w-50% text-sm px-4 py-2"
+            >
+              Try Simplifying
+            </button>
           </div>
 
           <div className="p-6 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-md">
             <h2 className="text-xl font-semibold mb-2">🎯 Guess Output</h2>
             <p className="text-sm text-gray-300 mb-4">
-              The AI will guess the output for a sample input and help you validate your logic.
+              The AI will guess the output for a sample input and help you
+              validate your logic.
             </p>
-            <button className="run-btn w-50% text-sm px-4 py-2">Try Guessing</button>
+            <button className="run-btn w-50% text-sm px-4 py-2">
+              Try Guessing
+            </button>
           </div>
         </div>
 
@@ -118,14 +147,18 @@ export default function ProblemPage() {
           {problem.inputFormat && (
             <div>
               <h2 className="text-lg font-semibold mb-1">Input Format</h2>
-              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.inputFormat}</div>
+              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">
+                {problem.inputFormat}
+              </div>
             </div>
           )}
 
           {problem.outputFormat && (
             <div>
               <h2 className="text-lg font-semibold mb-1">Output Format</h2>
-              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">{problem.outputFormat}</div>
+              <div className="bg-black/40 border border-white/10 rounded p-4 font-mono whitespace-pre-wrap">
+                {problem.outputFormat}
+              </div>
             </div>
           )}
 
@@ -142,9 +175,18 @@ export default function ProblemPage() {
             <div>
               <h2 className="text-lg font-semibold mb-1">Examples</h2>
               {problem.examples.map((ex, idx) => (
-                <div key={idx} className="bg-black/40 border border-white/10 rounded p-4 font-mono text-sm mb-4">
-                  <p><span className="text-white font-semibold">Input:</span> {ex.input}</p>
-                  <p><span className="text-white font-semibold">Output:</span> {ex.output}</p>
+                <div
+                  key={idx}
+                  className="bg-black/40 border border-white/10 rounded p-4 font-mono text-sm mb-4"
+                >
+                  <p>
+                    <span className="text-white font-semibold">Input:</span>{" "}
+                    {ex.input}
+                  </p>
+                  <p>
+                    <span className="text-white font-semibold">Output:</span>{" "}
+                    {ex.output}
+                  </p>
                 </div>
               ))}
             </div>
@@ -153,17 +195,43 @@ export default function ProblemPage() {
 
         {/* Solve now */}
         <div className="flex justify-center">
-          <button onClick={() => navigate(`/solve/${id}`)} className="run-btn text-sm px-6 py-3 mt-2">Solve Now</button>
+          <button
+            onClick={() => navigate(`/solve/${id}`)}
+            className="run-btn text-sm px-6 py-3 mt-2"
+          >
+            Solve Now
+          </button>
         </div>
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 px-4">
+
           <div className="bg-white text-black p-6 rounded-xl max-w-xl w-full relative max-h-[90vh] overflow-y-auto custom-scroll">
-            <button onClick={() => setShowModal(false)} className="absolute top-2 right-4 text-xl font-bold">×</button>
-            <h3 className="text-xl font-bold mb-4 text-center">🧠 AI Simplified View</h3>
-            {loadingVisual && <p>Loading visual explanation...</p>}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-4 text-xl font-bold"
+            >
+              ×
+            </button>
+            <h3 className="text-xl font-bold mb-4 text-center">
+              🧠 AI Simplified View
+            </h3>
+            {loadingVisual && (
+              <div className="flex flex-col items-center justify-center">
+                <Lottie
+                  animationData={aiLoader}
+                  loop
+                  autoplay
+                  className="w-32 h-32 md:w-40 md:h-40"
+                />
+                <p className="mt-2 text-sm text-gray-600">
+                  Generating visual explanation with AI…
+                </p>
+              </div>
+            )}
+
             {visualError && <p className="text-red-600">{visualError}</p>}
             {visualData && (
               <div className="space-y-4">

@@ -54,8 +54,17 @@ export default function Navbar() {
       animate="show"
     >
       <style>{`
+        :root {
+          --gradient-colorful-1: linear-gradient(270deg, #12C2E9 0%, #c471ed 50%, #f64f59 100%);
+          --color: rgba(255, 255, 255, 0.8);
+          --hover-color: rgba(255, 255, 255, 1);
+          --nav-link-bg-color: var(--gradient-colorful-1);
+        }
+
         .nav-hover-underline {
           position: relative;
+          color: var(--color);
+          transition: color 0.1s ease-out;
         }
 
         .nav-hover-underline::after {
@@ -64,13 +73,24 @@ export default function Navbar() {
           left: 0;
           bottom: -4px;
           width: 0%;
-          height: 2px;
-          background: white;
-          transition: width 0.3s ease;
+          height: 2.5px;
+          background: var(--nav-link-bg-color);
+          background-size: 200% 100%;
+          background-position: 100% 0;
+          border-radius: 2px;
+          filter: drop-shadow(0 0 6px rgba(246, 79, 89, 0.7));
+          transition: width 1.2s cubic-bezier(0.15, 0.85, 0.35, 1), 
+            background-position 0.8s cubic-bezier(0.2, 0.7, 0.4, 1);
+        }
+
+        .nav-hover-underline:hover {
+          color: var(--hover-color);
         }
 
         .nav-hover-underline:hover::after {
           width: 100%;
+          background-position: 0 0;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .neon-btn {
@@ -153,7 +173,7 @@ export default function Navbar() {
             <img
               src="/assets/kickdsa.png"
               alt="KickDSA Logo"
-              className="h-10 w-auto scale-380 object-contain"
+              className="h-10 w-auto scale-380 object-contain ml-4 sm:ml-0"
             />
           </Link>
         </motion.div>

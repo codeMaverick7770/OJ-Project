@@ -6,14 +6,89 @@ import OutputBox from "../components/OutputBox";
 import API from "../services/api";
 import AIHelpModal from "../components/AIHelpModal";
 import { Player } from "@lottiefiles/react-lottie-player";
-import { Wand2 } from "lucide-react";
+import { Wand2, Check } from "lucide-react";
 import Split from "react-split";
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello, World!\";\n  return 0;\n}`,
   java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello, World!\");\n  }\n}`,
   python: `print(\"Hello, World!\")`,
+  javascript: `console.log(\"Hello World!\")`,
 };
+
+function parseErrorToMarkers(errorMessage = "", language = "cpp") {
+  if (!errorMessage || typeof errorMessage !== "string") return [];
+  
+  const lines = errorMessage.split("\n");
+  const markers = [];
+
+  const regexMap = {
+    cpp: [
+      /(?:.*\.cpp|.*\.cc|.*\.c\+\+|.*):([0-9]+):([0-9]+):\s*error:\s*(.*)/i,
+      /^([0-9]+):([0-9]+):\s*error:\s*(.*)/i,
+      /error.*line\s*([0-9]+)/i
+    ],
+    java: [
+      /(?:.*\.java):([0-9]+):\s*error:\s*(.*)/i,
+      /^([0-9]+):\s*error:\s*(.*)/i
+    ],
+    python: [
+      /File\s*".*",\s*line\s*([0-9]+).*?\n?(.*)$/i,
+      /line\s*([0-9]+).*?\n?(.*)$/i
+    ],
+    javascript: [
+      /(?:.*\.js):([0-9]+):([0-9]+)\)?\s*(.*)/i,
+      /^([0-9]+):([0-9]+)\s*(.*)/i
+    ],
+  };
+
+  const regexes = regexMap[language.toLowerCase()] || regexMap.cpp;
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    
+    for (const regex of regexes) {
+      const match = line.match(regex);
+      if (match) {
+        const lineNumber = parseInt(match[1], 10);
+        const column = match[2] ? parseInt(match[2], 10) : 1;
+        const message = match[3]?.trim() || match[2]?.trim() || "Compilation error";
+        
+        if (lineNumber > 0) {
+          markers.push({
+            startLineNumber: lineNumber,
+            endLineNumber: lineNumber,
+            startColumn: column,
+            endColumn: column + 10,
+            message: message,
+            severity: 8,
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  return markers;
+}
+
+async function pollJobStatus(jobId, onResult, timeout = 15000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_COMPILER_URL}/status/${jobId}`,
+        { withCredentials: true }
+      );
+      if (data.status === "completed" || data.status === "error") {
+        onResult(data);
+        return;
+      }
+    } catch {}
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  onResult({ status: "timeout", error: "Polling timeout" });
+}
 
 export default function CompilerPage() {
   const location = useLocation();
@@ -33,6 +108,9 @@ export default function CompilerPage() {
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiHelpResponse, setAiHelpResponse] = useState("");
   const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
+  const [isFormatted, setIsFormatted] = useState(false);
+  const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
     if (id && !isCompilerOnly) {
@@ -60,8 +138,9 @@ export default function CompilerPage() {
     if (!problem || isCompilerOnly) return;
     setRunMode("example");
     setIsRunning(true);
+    setExampleResults([]);
+    setMarkers([]);
     const results = [];
-
     for (const ex of problem.examples) {
       try {
         const { data } = await axios.post(
@@ -69,13 +148,20 @@ export default function CompilerPage() {
           { language, code: code[language], input: ex.input },
           { withCredentials: true }
         );
-        const actual = data.output.trim();
-        const expected = ex.output.trim();
-        results.push({
-          input: ex.input,
-          expected,
-          actual,
-          pass: actual === expected,
+        const { jobId } = data;
+        await pollJobStatus(jobId, (status) => {
+          const actual = (status?.output || "").toString().trim();
+          const expected = ex.output.trim();
+          results.push({
+            input: ex.input,
+            expected,
+            actual,
+            pass: actual === expected,
+          });
+          if (status.status === "error" && status.error) {
+            const errorMarkers = parseErrorToMarkers(status.error, language);
+            setMarkers(errorMarkers);
+          }
         });
       } catch {
         results.push({
@@ -86,7 +172,6 @@ export default function CompilerPage() {
         });
       }
     }
-
     setExampleResults(results);
     setIsRunning(false);
   };
@@ -94,15 +179,32 @@ export default function CompilerPage() {
   const handleRun = async () => {
     setRunMode("custom");
     setIsRunning(true);
+    setOutput("");
+    setMarkers([]);
     try {
-      const res = await axios.post(
+      const { data } = await axios.post(
         import.meta.env.VITE_COMPILER_URL,
         { language, code: code[language], input },
         { withCredentials: true }
       );
-      setOutput(res.data.output);
+      const { jobId } = data;
+      await pollJobStatus(jobId, (status) => {
+        if (status.status === "completed") {
+          setOutput(status.output || "");
+          setMarkers([]);
+        } else {
+          setOutput(status.error || "Compilation error");
+          if (status.error) {
+            const errorMarkers = parseErrorToMarkers(status.error, language);
+            setMarkers(errorMarkers);
+          }
+        }
+      });
     } catch (err) {
-      setOutput(err.response?.data?.error?.stderr || "Compilation error");
+      const errorMsg = err.response?.data?.error || "Compilation error";
+      setOutput(errorMsg);
+      const errorMarkers = parseErrorToMarkers(errorMsg, language);
+      setMarkers(errorMarkers);
     } finally {
       setIsRunning(false);
     }
@@ -112,10 +214,10 @@ export default function CompilerPage() {
     if (!problem || isCompilerOnly) return;
     setIsSubmitting(true);
     setRunMode("example");
+    setMarkers([]);
     const userId = localStorage.getItem("userId");
     let firstFailed = null;
     const results = [];
-
     for (const tc of problem.testCases) {
       try {
         const { data } = await axios.post(
@@ -123,12 +225,19 @@ export default function CompilerPage() {
           { language, code: code[language], input: tc.input },
           { withCredentials: true }
         );
-        const actual = data.output.trim();
-        const expected = tc.expectedOutput.trim();
-        const pass = actual === expected;
-        const result = { input: tc.input, expected, actual, pass };
-        results.push(result);
-        if (!pass && !firstFailed) firstFailed = result;
+        const { jobId } = data;
+        await pollJobStatus(jobId, (status) => {
+          const actual = (status?.output || "").toString().trim();
+          const expected = tc.expectedOutput.trim();
+          const pass = actual === expected;
+          const result = { input: tc.input, expected, actual, pass };
+          results.push(result);
+          if (!pass && !firstFailed) firstFailed = result;
+          if (status.status === "error" && status.error) {
+            const errorMarkers = parseErrorToMarkers(status.error, language);
+            setMarkers(errorMarkers);
+          }
+        });
       } catch {
         const result = {
           input: tc.input,
@@ -140,43 +249,29 @@ export default function CompilerPage() {
         if (!firstFailed) firstFailed = result;
       }
     }
-
     setExampleResults(results);
-
     if (firstFailed) {
       setFeedback(firstFailed);
       setOutput("❌ Failed on a hidden test case. You can request AI help.");
     } else {
       try {
-        // IMPORTANT FIX:
-        // The backend increments submissionCount on submission creation,
-        // but solvedCount only increments if the problem is newly solved.
-        // To ensure solvedCount increments correctly, we must call the leaderboard update endpoint
-        // AFTER successful submission creation, so it can update solvedCount and score properly.
-        // So we call the submission creation API, then call leaderboard update API explicitly here.
-
         await API.post("/submissions", {
           userId,
           problemId: problem._id,
           language,
           code: code[language],
         });
-
-        // Call leaderboard update explicitly to ensure solvedCount increments if needed
         await API.post("/leaderboard/update", {
           userId,
           problemId: problem._id,
         });
-
-        setOutput(
-          "🎉 All test cases passed! Your solution has been submitted."
-        );
+        setOutput("🎉 All test cases passed! Your solution has been submitted.");
         setShowPopup(true);
+        setMarkers([]);
       } catch {
         setOutput("✅ Passed all tests, but submission error occurred.");
       }
     }
-
     setIsSubmitting(false);
   };
 
@@ -203,14 +298,43 @@ export default function CompilerPage() {
     }
   };
 
-  const beautifyCode = () => {
+  const beautifyCode = async () => {
+    if (isFormatting) return;
+    setIsFormatting(true);
+    setIsFormatted(false);
+
+    const currentCode = code?.[language];
+
+    if (!currentCode) {
+      alert("No code found for selected language.");
+      setIsFormatting(false);
+      return;
+    }
+
     try {
-      const formatted = code[language]
-        .split("\n")
-        .map((line) => line.trimStart())
-        .join("\n");
-      setCode((prev) => ({ ...prev, [language]: formatted }));
-    } catch {}
+      const response = await axios.post(
+        `${import.meta.env.VITE_COMPILER_URL}/format`,
+        {
+          language,
+          code: currentCode,
+        },
+        { withCredentials: true }
+      );
+
+      const formattedCode = response.data.formattedCode;
+
+      if (formattedCode) {
+        setCode((prev) => ({ ...prev, [language]: formattedCode }));
+        setIsFormatted(true);
+        setTimeout(() => setIsFormatted(false), 1500);
+      } else {
+        alert("Unable to format code.");
+      }
+    } catch (error) {
+      alert("Failed to format code. Please try again.");
+    } finally {
+      setIsFormatting(false);
+    }
   };
 
   return (
@@ -274,35 +398,23 @@ export default function CompilerPage() {
                   <section className="space-y-4">
                     <div>
                       <h3 className="font-semibold text-white/70">Description</h3>
-                      <pre className="whitespace-pre-wrap">
-                        {problem.description}
-                      </pre>
+                      <pre className="whitespace-pre-wrap">{problem.description}</pre>
                     </div>
                     {problem.inputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">
-                          Input Format
-                        </h3>
-                        <pre className="whitespace-pre-wrap">
-                          {problem.inputFormat}
-                        </pre>
+                        <h3 className="font-semibold text-white/70">Input Format</h3>
+                        <pre className="whitespace-pre-wrap">{problem.inputFormat}</pre>
                       </div>
                     )}
                     {problem.outputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">
-                          Output Format
-                        </h3>
-                        <pre className="whitespace-pre-wrap">
-                          {problem.outputFormat}
-                        </pre>
+                        <h3 className="font-semibold text-white/70">Output Format</h3>
+                        <pre className="whitespace-pre-wrap">{problem.outputFormat}</pre>
                       </div>
                     )}
                     {problem.constraints?.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-white/70">
-                          Constraints
-                        </h3>
+                        <h3 className="font-semibold text-white/70">Constraints</h3>
                         <ul className="list-disc list-inside">
                           {problem.constraints.map((line, idx) => (
                             <li key={idx}>{line}</li>
@@ -315,13 +427,9 @@ export default function CompilerPage() {
                         <h3 className="font-semibold text-white/70">Examples</h3>
                         {problem.examples.map((ex, idx) => (
                           <div key={idx} className="mb-2">
-                            <p>
-                              <strong>Input:</strong>
-                            </p>
+                            <p><strong>Input:</strong></p>
                             <pre>{ex.input}</pre>
-                            <p>
-                              <strong>Output:</strong>
-                            </p>
+                            <p><strong>Output:</strong></p>
                             <pre>{ex.output}</pre>
                           </div>
                         ))}
@@ -342,15 +450,18 @@ export default function CompilerPage() {
                   <option value="cpp">C++</option>
                   <option value="java">Java</option>
                   <option value="python">Python</option>
+                  <option value="javascript">Javascript</option>
                 </select>
                 <div className="flex gap-2">
                   <button
                     className="icon-btn"
                     onClick={beautifyCode}
                     title="Auto Format"
+                    disabled={isFormatting}
                   >
-                    <Wand2 size={20} />
+                    {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
                   </button>
+
                   <button
                     onClick={() => setShowAiModal(true)}
                     className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
@@ -386,10 +497,9 @@ export default function CompilerPage() {
               <div className="flex-1 overflow-auto p-2">
                 <CompilerEditor
                   code={code[language]}
-                  setCode={(newCode) =>
-                    setCode((prev) => ({ ...prev, [language]: newCode }))
-                  }
+                  setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
                   language={language}
+                  markers={markers}
                 />
                 {runMode === "custom" && (
                   <textarea
@@ -419,24 +529,25 @@ export default function CompilerPage() {
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
                 <option value="python">Python</option>
+                <option value="javascript">Javascript</option>
               </select>
               <div className="flex gap-2">
                 <button
                   className="icon-btn"
                   onClick={beautifyCode}
                   title="Auto Format"
+                  disabled={isFormatting}
                 >
-                  <Wand2 size={20} />
+                  {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
                 </button>
               </div>
             </div>
             <div className="flex-1 overflow-auto p-2">
               <CompilerEditor
                 code={code[language]}
-                setCode={(newCode) =>
-                  setCode((prev) => ({ ...prev, [language]: newCode }))
-                }
+                setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
                 language={language}
+                markers={markers}
               />
               <textarea
                 className="mt-4 bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
@@ -456,7 +567,13 @@ export default function CompilerPage() {
 
         <div className="flex justify-center mt-6 gap-4">
           <button
-            onClick={isCompilerOnly ? handleRun : (runMode === "example" ? runExampleTestCases : handleRun)}
+            onClick={
+              isCompilerOnly
+                ? handleRun
+                : runMode === "example"
+                ? runExampleTestCases
+                : handleRun
+            }
             disabled={isRunning}
             className="run-btn flex items-center gap-2 px-6 py-2 text-sm"
           >
@@ -477,20 +594,14 @@ export default function CompilerPage() {
         {!isCompilerOnly && feedback && (
           <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
             <p className="font-semibold text-sm">❌ Failing Test Case</p>
-            <p>
-              <strong>Input:</strong> {feedback.input}
-            </p>
-            <p>
-              <strong>Expected:</strong> {feedback.expected}
-            </p>
-            <p>
-              <strong>Got:</strong> {feedback.actual}
-            </p>
+            <p><strong>Input:</strong> {feedback.input}</p>
+            <p><strong>Expected:</strong> {feedback.expected}</p>
+            <p><strong>Got:</strong> {feedback.actual}</p>
           </div>
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .split-gutter {
           background: #999;
           width: 4px;
@@ -589,7 +700,7 @@ export default function CompilerPage() {
         .neon-select {
           background-color: #1c1c2a;
           color: white;
-          padding: 6px 14px;
+          padding: 6px 12px;
           border-radius: 8px;
           font-size: 0.875rem;
           font-weight: 500;
@@ -600,6 +711,9 @@ export default function CompilerPage() {
           background-repeat: no-repeat;
           background-position: right 0.6rem center;
           background-size: 0.65rem;
+          width: auto;
+          max-width: 12rem;
+          min-width: 6rem;
           transition: all 0.3s ease;
           box-shadow: 0 0 8px rgba(114, 134, 255, 0.5), 0 0 14px rgba(254, 117, 135, 0.3);
         }
@@ -615,6 +729,48 @@ export default function CompilerPage() {
             transform: rotate(360deg);
           }
         }
+        .icon-btn {
+        background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  border-radius: 6px;
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25),
+              0 0 20px rgba(114, 134, 255, 0.25),
+              0 0 30px rgba(254, 117, 135, 0.15);
+}
+
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Optional tick animation */
+.icon-tick {
+  animation: tickFade 0.3s ease;
+  color: white;
+}
+
+@keyframes tickFade {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
       `}</style>
     </div>
   );

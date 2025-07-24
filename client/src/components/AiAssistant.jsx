@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Lottie from 'lottie-react';
+import AiAnimation from '../assets/Ai.json'; // Ensure this path is correct
 import {
-  SparklesIcon,
   PuzzlePieceIcon,
   ChatBubbleBottomCenterTextIcon,
   ChartBarIcon,
-  LightBulbIcon
+  LightBulbIcon,
 } from '@heroicons/react/24/outline';
 
 const features = [
@@ -41,12 +42,21 @@ const itemVariants = {
 
 export default function AIAssistant() {
   const [open, setOpen] = useState(false);
+  const animationRef = useRef();
+
+  useEffect(() => {
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current.play();
+    }
+  }, []);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <motion.button
+      {/* AI Button with Lottie Animation */}
+      <motion.div
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-center w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg"
+        className="cursor-pointer w-32 h-32"
         variants={buttonVariants}
         initial="pulse"
         animate="pulse"
@@ -55,9 +65,16 @@ export default function AIAssistant() {
         aria-label="Toggle AI Assistant Panel"
         aria-expanded={open}
       >
-        <SparklesIcon className="w-6 h-6" />
-      </motion.button>
+        <Lottie
+          lottieRef={animationRef}
+          animationData={AiAnimation}
+          loop={false}
+          autoplay={false}
+          className="w-full h-full"
+        />
+      </motion.div>
 
+      {/* AI Assistant Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -65,7 +82,7 @@ export default function AIAssistant() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute bottom-16 right-0 w-72 bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-xl p-4 shadow-lg"
+            className="absolute bottom-36 right-0 w-72 bg-black/60 backdrop-blur-lg border border-purple-500/30 rounded-xl p-4 shadow-xl"
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-purple-300">AI Assistant</h3>

@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { v4: uuid } = require('uuid');
 
 const dirCodes = path.join(__dirname, 'codes');
 
@@ -8,14 +7,13 @@ if (!fs.existsSync(dirCodes)) {
     fs.mkdirSync(dirCodes, { recursive: true });
 }
 
-const generateFile = (language, content) => {
-    const jobID = uuid();
+const generateFile = (language, content, jobId) => {
     let filename;
 
     if (language === 'java') {
-        filename = `Main.java`; // Java class must match filename
+        filename = `Main.java`; // Java must be Main.java
     } else {
-        filename = `${jobID}.${language}`;
+        filename = `${jobId}.${language}`;
     }
 
     const filePath = path.join(dirCodes, filename);
