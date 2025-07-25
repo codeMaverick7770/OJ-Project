@@ -1,64 +1,83 @@
-import { useEffect, useState } from 'react';
-import API from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { Search, Filter, ListFilter } from 'lucide-react';
+import { useEffect, useState } from "react";
+import API from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { useLoading } from "../context/LoadingContext"; // <-- global loading context
+import { Link } from "react-router-dom";
+import { Search, Filter, ListFilter } from "lucide-react";
 
-const sampleTags = ['Array', 'String', 'Math', 'Greedy', 'DP', 'Tree', 'Graph'];
+const sampleTags = ["Array", "String", "Math", "Greedy", "DP", "Tree", "Graph"];
 
 export default function ProblemList() {
   const [problems, setProblems] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [activeTags, setActiveTags] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { user } = useAuth();
 
+  const { showLoader, hideLoader } = useLoading();
+
   useEffect(() => {
-    API.get('/problem')
-      .then(res => setProblems(res.data.problems))
-      .catch(() => setError('Failed to fetch problems'));
+    showLoader("Loading problems...");
+    API.get("/problem")
+      .then((res) => {
+        setProblems(res.data.problems);
+      })
+      .catch(() => {
+        setError("Failed to fetch problems");
+      })
+      .finally(() => {
+        hideLoader();
+      });
   }, []);
 
   const handleTagToggle = (tag) => {
     setActiveTags((prev) =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this problem?')) return;
+    if (!window.confirm("Are you sure you want to delete this problem?"))
+      return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       await API.delete(`/problem/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      setProblems(prev => prev.filter(p => p._id !== id));
-      alert('✅ Problem deleted successfully');
+      setProblems((prev) => prev.filter((p) => p._id !== id));
+      alert("✅ Problem deleted successfully");
     } catch (err) {
-      console.error('❌ Delete failed:', err.response?.data || err.message);
-      alert('Failed to delete problem');
+      console.error("❌ Delete failed:", err.response?.data || err.message);
+      alert("Failed to delete problem");
     }
   };
 
   const difficultyColor = (level) => {
-    if (level === 'Easy') return 'text-green-400';
-    if (level === 'Medium') return 'text-yellow-400';
-    if (level === 'Hard') return 'text-red-500';
-    return 'text-gray-300';
+    if (level === "Easy") return "text-green-400";
+    if (level === "Medium") return "text-yellow-400";
+    if (level === "Hard") return "text-red-500";
+    return "text-gray-300";
   };
 
-  const filtered = problems.filter(problem => {
-    const matchesSearch = problem.title.toLowerCase().includes(search.toLowerCase());
-    const matchesTag = activeTags.length === 0 || activeTags.some(tag => problem.tags?.includes(tag));
+  const filtered = problems.filter((problem) => {
+    const matchesSearch = problem.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesTag =
+      activeTags.length === 0 ||
+      activeTags.some((tag) => problem.tags?.includes(tag));
     return matchesSearch && matchesTag;
   });
 
   return (
     <div className="min-h-screen relative text-white">
       {/* Background Image with Stronger Blur and Dark Overlay */}
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0" style={{ backgroundImage: `url('/assets/background.jpg')` }} />
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{ backgroundImage: `url('/assets/background.jpg')` }}
+      />
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0" />
 
       {/* Content */}
@@ -79,14 +98,14 @@ export default function ProblemList() {
 
         {/* Tag Filters */}
         <div className="flex flex-wrap justify-center gap-2 mt-4">
-          {sampleTags.map(tag => (
+          {sampleTags.map((tag) => (
             <button
               key={tag}
               onClick={() => handleTagToggle(tag)}
               className={`px-3 py-1 rounded-full text-sm border transition ${
                 activeTags.includes(tag)
-                  ? 'bg-purple-600 border-purple-400 text-white'
-                  : 'bg-white/10 border-black/10 text-gray-300 hover:bg-purple-700'
+                  ? "bg-purple-600 border-purple-400 text-white"
+                  : "bg-white/10 border-black/10 text-gray-300 hover:bg-purple-700"
               }`}
             >
               {tag}
@@ -122,7 +141,9 @@ export default function ProblemList() {
         {/* Problem List */}
         <div className="space-y-3 mt-4">
           {filtered.length === 0 ? (
-            <p className="text-center text-gray-400 py-12">No problems found.</p>
+            <p className="text-center text-gray-400 py-12">
+              No problems found.
+            </p>
           ) : (
             filtered.map((problem, idx) => (
               <div
@@ -130,7 +151,9 @@ export default function ProblemList() {
                 className="flex items-center justify-between bg-black/10 border border-white/15 rounded-lg px-5 py-4 hover:bg-white/5 transition shadow-md backdrop-blur-md"
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-                  <span className="text-sm text-gray-400 font-mono">#{idx + 1}</span>
+                  <span className="text-sm text-gray-400 font-mono">
+                    #{idx + 1}
+                  </span>
                   <Link
                     to={`/problem/${problem._id}`}
                     className="text-lg font-extrabold bg-gradient-to-r from-purple-300 to-pink-400 bg-clip-text text-transparent hover:underline drop-shadow-md"
@@ -138,7 +161,7 @@ export default function ProblemList() {
                     {problem.title}
                   </Link>
                   <div className="flex gap-2 flex-wrap">
-                    {problem.tags?.slice(0, 3).map(tag => (
+                    {problem.tags?.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
                         className="text-xs bg-white/5 px-2 py-1 rounded-full text-gray-200"
@@ -150,10 +173,14 @@ export default function ProblemList() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className={`font-bold text-sm ${difficultyColor(problem.difficulty)}`}>
+                  <span
+                    className={`font-bold text-sm ${difficultyColor(
+                      problem.difficulty
+                    )}`}
+                  >
                     {problem.difficulty}
                   </span>
-                  {user?.role === 'admin' && (
+                  {user?.role === "admin" && (
                     <>
                       <Link
                         to={`/edit-problem/${problem._id}`}

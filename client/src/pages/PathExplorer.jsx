@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import GlobalLoader from "../components/GlobalLoader";
 
 const learningPaths = [
   {
@@ -69,6 +70,15 @@ const fadeUp = {
 };
 
 export default function PathExplorer() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading (e.g., data fetch or transition)
+    const timer = setTimeout(() => setLoading(false), 1000); // simulate 1s delay
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <GlobalLoader />;
   return (
     <div
       className="pt-24 px-6 md:px-16 pb-16 min-h-screen text-white bg-cover bg-center"
@@ -78,7 +88,6 @@ export default function PathExplorer() {
       }}
     >
       <div className="backdrop-blur-md bg-black/60 border border-white/20 rounded-xl px-4 md:px-8 py-12 shadow-lg">
-
         <motion.h2
           className="text-4xl md:text-5xl font-bold text-center mb-6"
           initial="hidden"
@@ -95,9 +104,10 @@ export default function PathExplorer() {
           variants={fadeUp}
           custom={1}
         >
-          We’ve curated the best DSA roadmaps from the internet. Pick your favorite creator,
-          and follow their structured playlist. We’ll soon add personalized tracking, AI hints,
-          and progress analytics to help you stay on track.
+          We’ve curated the best DSA roadmaps from the internet. Pick your
+          favorite creator, and follow their structured playlist. We’ll soon add
+          personalized tracking, AI hints, and progress analytics to help you
+          stay on track.
         </motion.p>
 
         <div className="grid gap-8 md:grid-cols-2">
@@ -120,7 +130,8 @@ export default function PathExplorer() {
                   {path.name}
                 </h3>
                 <p className="text-sm text-gray-400 mb-2">
-                  by <span className="text-white font-medium">{path.creator}</span>
+                  by{" "}
+                  <span className="text-white font-medium">{path.creator}</span>
                 </p>
                 <ul className="list-disc ml-5 text-gray-300 text-sm space-y-1 mb-4">
                   {path.highlights.map((line, idx) => (

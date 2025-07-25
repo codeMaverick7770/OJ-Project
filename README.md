@@ -1,4 +1,4 @@
-# KickDSA — AI-Assisted DSA Platform for Beginners
+# KickDSA — AI-Assisted DSA Platform for Beginners and Intermediates
 
 Welcome to **kickDSA** — an **AI-powered Online Judge** built for beginners struggling with Data Structures and Algorithms (DSA).
 

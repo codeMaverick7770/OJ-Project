@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import GlobalLoader from "../components/GlobalLoader";
 
 axios.defaults.withCredentials = true;
 
@@ -11,7 +12,9 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/leaderboard`);
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/leaderboard`
+        );
         if (Array.isArray(res.data)) {
           setUsers(res.data);
         } else {
@@ -27,8 +30,7 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  if (loading) return <div className="text-white text-center mt-24">Loading...</div>;
-
+  if (loading) return <GlobalLoader />;
   return (
     <div className="min-h-screen relative font-sans text-white">
       {/* Neon background */}
@@ -92,7 +94,9 @@ export default function LeaderboardPage() {
                   </td>
                   <td className="p-4">{user.solvedCount ?? 0}</td>
                   <td className="p-4">{user.submissionCount ?? 0}</td>
-                  <td className="p-4 text-green-300 font-semibold">{user.score ?? 0}</td>
+                  <td className="p-4 text-green-300 font-semibold">
+                    {user.score ?? 0}
+                  </td>
                 </tr>
               ))}
             </tbody>
