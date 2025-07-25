@@ -30,60 +30,63 @@ app.use(
   })
 );
 
-// 🐰 RabbitMQ Connection Setup
+// 🐰 RabbitMQ Setup
 let channel, connection;
 const queueName = 'code_submissions';
 
 async function connectRabbitMQ() {
   try {
-    connection = await amqp.connect('amqp://localhost');
+    const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://localhost';
+    connection = await amqp.connect(RABBITMQ_URL);
     channel = await connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });
     console.log('📡 Connected to RabbitMQ');
   } catch (err) {
-    console.error('❌ RabbitMQ connection error:', err.message);
+    console.error('❌ Failed to connect to RabbitMQ:', err.message);
+    console.error('🔁 Retrying in 5 seconds...');
+    setTimeout(connectRabbitMQ, 5000);
   }
 }
 
-connectRabbitMQ(); // Call on startup
+// 🧠 Redis Check
+async function checkRedisConnection() {
+  try {
+    await redisClient.set('redis_test', 'ok', 'EX', 10);
+    console.log('🟥 Connected to Redis');
+  } catch (err) {
+    console.error('❌ Redis connection error:', err.message);
+  }
+}
 
-// 🟡 POST /run → Queue job
+// 🟡 POST /run
 app.post('/run', async (req, res) => {
   const { language = 'cpp', code, input = '' } = req.body;
-
   if (!code) return res.status(400).json({ error: 'Code is empty' });
 
   const submissionId = uuidv4();
   const payload = { id: submissionId, language, code, input };
 
   try {
-    // Send job to queue
     channel.sendToQueue(queueName, Buffer.from(JSON.stringify(payload)), {
       persistent: true,
     });
 
-    // Set initial status to Redis
     await redisClient.set(submissionId, JSON.stringify({ status: 'queued' }));
-
     console.log('📨 Job queued:', submissionId);
-    return res.status(202).json({ jobId: submissionId }); // ✅ changed line
+    return res.status(202).json({ jobId: submissionId });
   } catch (err) {
     console.error('🚨 Failed to queue job:', err.message);
     return res.status(500).json({ error: 'Failed to queue the job' });
   }
 });
 
-// 🟢 GET /status/:submissionId → Fetch result/status
-// 🟢 GET /run/status/:submissionId → Fetch result/status
+// 🟢 GET /run/status/:submissionId
 app.get('/run/status/:submissionId', async (req, res) => {
   const { submissionId } = req.params;
 
   try {
     const result = await redisClient.get(submissionId);
-
-    if (!result) {
-      return res.status(202).json({ status: 'pending' });
-    }
+    if (!result) return res.status(202).json({ status: 'pending' });
 
     return res.status(200).json(JSON.parse(result));
   } catch (err) {
@@ -92,6 +95,7 @@ app.get('/run/status/:submissionId', async (req, res) => {
   }
 });
 
+// ✨ Code Formatter Route
 app.post('/run/format', async (req, res) => {
   const { language, code } = req.body;
 
@@ -111,10 +115,15 @@ app.post('/run/format', async (req, res) => {
   }
 });
 
+// 🔁 Start Server
+async function startServer() {
+  await checkRedisConnection();
+  await connectRabbitMQ();
 
+  const PORT = process.env.PORT || 8001;
+  app.listen(PORT, () => {
+    console.log(`🚀 Compiler server running on port ${PORT}`);
+  });
+}
 
-// 🚀 Start server
-const PORT = process.env.PORT || 8001;
-app.listen(PORT, () => {
-  console.log(`🚀 Compiler server running on port ${PORT}`);
-});
+startServer();
