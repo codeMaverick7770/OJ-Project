@@ -11,29 +11,31 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Install system-level dependencies for compiling & formatting code
+# Install system-level dependencies and formatters
 RUN apt update && \
     apt install -y \
     g++ \
+    clang \
     clang-format \
     python3 \
     python3-pip \
     default-jdk \
     curl \
     git && \
+    # Install Python formatter
     pip install autopep8 && \
+    # Install JS formatter
     npm install -g prettier && \
-    curl -L -o google-java-format.jar https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar && \
-    ln -s /app/google-java-format.jar /usr/local/bin/google-java-format && \
+    # Install Java formatter
+    curl -L -o /usr/local/bin/google-java-format.jar https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar && \
+    echo '#!/bin/bash\nexec java -jar /usr/local/bin/google-java-format.jar "$@"' > /usr/local/bin/google-java-format && \
+    chmod +x /usr/local/bin/google-java-format && \
+    # Clean up
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Add a simple wrapper script for java formatting
-RUN echo '#!/bin/bash\njava -jar /usr/local/bin/google-java-format "$@"' > /usr/local/bin/google-java-format && \
-    chmod +x /usr/local/bin/google-java-format
-
-# Expose the port your app listens on
+# Expose the port your Node.js app listens on
 EXPOSE 8001
 
-# Start the server
+# Start the Node.js server
 CMD ["node", "index.js"]

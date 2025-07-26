@@ -5,52 +5,54 @@ const { v4: uuidv4 } = require('uuid');
 
 async function formatCode(language, code) {
   const fileId = uuidv4();
-
   const tempDir = path.join(process.cwd(), 'temp');
   await fs.mkdir(tempDir, { recursive: true });
 
   let extension;
   let command;
+  const fileName = `${fileId}`;
 
-  switch (language) {
+  switch (language.toLowerCase()) {
     case 'cpp':
+    case 'c':
+    case 'clang':
       extension = 'cpp';
-      command = `clang-format ${fileId}.cpp`;
+      command = `clang-format ${fileName}.cpp -i && cat ${fileName}.cpp`;
       break;
+
     case 'python':
       extension = 'py';
-      command = `autopep8 ${fileId}.py`;
+      command = `autopep8 --in-place ${fileName}.py && cat ${fileName}.py`;
       break;
+
     case 'javascript':
       extension = 'js';
-      command = `npx prettier --stdin-filepath ${fileId}.js < ${fileId}.js`;
+      command = `npx prettier --stdin-filepath ${fileName}.js < ${fileName}.js`;
       break;
+
     case 'java':
       extension = 'java';
-      command = `npx google-java-format -i ${fileId}.java && type ${fileId}.java`;
+      command = `java -jar /usr/local/bin/google-java-format.jar ${fileName}.java && cat ${fileName}.java`;
       break;
+
     default:
       throw new Error('Unsupported language');
   }
 
-  const filePath = path.join(tempDir, `${fileId}.${extension}`);
+  const filePath = path.join(tempDir, `${fileName}.${extension}`);
   await fs.writeFile(filePath, code);
 
   return new Promise((resolve, reject) => {
     exec(command, { cwd: tempDir }, async (error, stdout, stderr) => {
       try {
-        await fs.unlink(filePath); // cleanup
+        await fs.unlink(filePath);
 
         if (error) {
+          console.error('Formatting error:', stderr || error.message);
           return reject(new Error(stderr || error.message));
         }
 
-        const formatted =
-          stdout || (language === 'java'
-            ? await fs.readFile(filePath, 'utf8') // java modifies in-place
-            : '');
-
-        resolve(formatted.trim());
+        resolve(stdout.trim());
       } catch (cleanupErr) {
         reject(new Error('Cleanup failed'));
       }
