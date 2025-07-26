@@ -18,7 +18,7 @@ const defaultHelloWorld = {
 
 function parseErrorToMarkers(errorMessage = "", language = "cpp") {
   if (!errorMessage || typeof errorMessage !== "string") return [];
-  
+
   const lines = errorMessage.split("\n");
   const markers = [];
 
@@ -26,19 +26,19 @@ function parseErrorToMarkers(errorMessage = "", language = "cpp") {
     cpp: [
       /(?:.*\.cpp|.*\.cc|.*\.c\+\+|.*):([0-9]+):([0-9]+):\s*error:\s*(.*)/i,
       /^([0-9]+):([0-9]+):\s*error:\s*(.*)/i,
-      /error.*line\s*([0-9]+)/i
+      /error.*line\s*([0-9]+)/i,
     ],
     java: [
       /(?:.*\.java):([0-9]+):\s*error:\s*(.*)/i,
-      /^([0-9]+):\s*error:\s*(.*)/i
+      /^([0-9]+):\s*error:\s*(.*)/i,
     ],
     python: [
-      /File\s*".*",\s*line\s*([0-9]+).*?\n?(.*)$/i,
-      /line\s*([0-9]+).*?\n?(.*)$/i
+      /File\s*\".*\",\s*line\s*([0-9]+).*?\n?(.*)$/i,
+      /line\s*([0-9]+).*?\n?(.*)$/i,
     ],
     javascript: [
       /(?:.*\.js):([0-9]+):([0-9]+)\)?\s*(.*)/i,
-      /^([0-9]+):([0-9]+)\s*(.*)/i
+      /^([0-9]+):([0-9]+)\s*(.*)/i,
     ],
   };
 
@@ -46,14 +46,15 @@ function parseErrorToMarkers(errorMessage = "", language = "cpp") {
 
   for (const line of lines) {
     if (!line.trim()) continue;
-    
+
     for (const regex of regexes) {
       const match = line.match(regex);
       if (match) {
         const lineNumber = parseInt(match[1], 10);
         const column = match[2] ? parseInt(match[2], 10) : 1;
-        const message = match[3]?.trim() || match[2]?.trim() || "Compilation error";
-        
+        const message =
+          match[3]?.trim() || match[2]?.trim() || "Compilation error";
+
         if (lineNumber > 0) {
           markers.push({
             startLineNumber: lineNumber,
@@ -73,18 +74,33 @@ function parseErrorToMarkers(errorMessage = "", language = "cpp") {
 }
 
 async function pollJobStatus(jobId, onResult, timeout = 15000) {
+  if (!jobId) {
+    onResult({ status: "error", error: "Invalid job ID" });
+    return;
+  }
+
   const start = Date.now();
   while (Date.now() - start < timeout) {
     try {
-      const { data } = await axios.get(
-        `${import.meta.env.VITE_COMPILER_URL}/status/${jobId}`,
-        { withCredentials: true }
-      );
+      const compilerBase =
+        import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
+      // Assuming VITE_COMPILER_URL is base, add /run/status/ path explicitly
+      const { data } = await axios.get(`${compilerBase}/status/${jobId}`, {
+        withCredentials: true,
+      });
+
+      if (!data) {
+        await new Promise((r) => setTimeout(r, 1000));
+        continue;
+      }
+
       if (data.status === "completed" || data.status === "error") {
         onResult(data);
         return;
       }
-    } catch {}
+    } catch (error) {
+      console.error("Status polling error:", error);
+    }
     await new Promise((r) => setTimeout(r, 1000));
   }
   onResult({ status: "timeout", error: "Polling timeout" });
@@ -143,12 +159,25 @@ export default function CompilerPage() {
     const results = [];
     for (const ex of problem.examples) {
       try {
+        const compilerBase =
+          import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
         const { data } = await axios.post(
-          import.meta.env.VITE_COMPILER_URL,
+          `${compilerBase}`,
           { language, code: code[language], input: ex.input },
           { withCredentials: true }
         );
+
         const { jobId } = data;
+        if (!jobId) {
+          results.push({
+            input: ex.input,
+            expected: ex.output.trim(),
+            actual: "No Job ID",
+            pass: false,
+          });
+          continue;
+        }
+
         await pollJobStatus(jobId, (status) => {
           const actual = (status?.output || "").toString().trim();
           const expected = ex.output.trim();
@@ -182,12 +211,21 @@ export default function CompilerPage() {
     setOutput("");
     setMarkers([]);
     try {
+      const compilerBase =
+        import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
       const { data } = await axios.post(
-        import.meta.env.VITE_COMPILER_URL,
+        `${compilerBase}`,
         { language, code: code[language], input },
         { withCredentials: true }
       );
+
       const { jobId } = data;
+      if (!jobId) {
+        setOutput("Failed to get job ID from server.");
+        setIsRunning(false);
+        return;
+      }
+
       await pollJobStatus(jobId, (status) => {
         if (status.status === "completed") {
           setOutput(status.output || "");
@@ -220,12 +258,27 @@ export default function CompilerPage() {
     const results = [];
     for (const tc of problem.testCases) {
       try {
+        const compilerBase =
+          import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
         const { data } = await axios.post(
-          import.meta.env.VITE_COMPILER_URL,
+          `${compilerBase}`,
           { language, code: code[language], input: tc.input },
           { withCredentials: true }
         );
+
         const { jobId } = data;
+        if (!jobId) {
+          const result = {
+            input: tc.input,
+            expected: tc.expectedOutput.trim(),
+            actual: "No Job ID",
+            pass: false,
+          };
+          results.push(result);
+          if (!firstFailed) firstFailed = result;
+          continue;
+        }
+
         await pollJobStatus(jobId, (status) => {
           const actual = (status?.output || "").toString().trim();
           const expected = tc.expectedOutput.trim();
@@ -265,7 +318,9 @@ export default function CompilerPage() {
           userId,
           problemId: problem._id,
         });
-        setOutput("🎉 All test cases passed! Your solution has been submitted.");
+        setOutput(
+          "🎉 All test cases passed! Your solution has been submitted."
+        );
         setShowPopup(true);
         setMarkers([]);
       } catch {
@@ -312,8 +367,10 @@ export default function CompilerPage() {
     }
 
     try {
+      const compilerBase =
+        import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
       const response = await axios.post(
-        `${import.meta.env.VITE_COMPILER_URL}/format`,
+        `${compilerBase}/format`,
         {
           language,
           code: currentCode,
@@ -397,24 +454,38 @@ export default function CompilerPage() {
                   </h2>
                   <section className="space-y-4">
                     <div>
-                      <h3 className="font-semibold text-white/70">Description</h3>
-                      <pre className="whitespace-pre-wrap">{problem.description}</pre>
+                      <h3 className="font-semibold text-white/70">
+                        Description
+                      </h3>
+                      <pre className="whitespace-pre-wrap">
+                        {problem.description}
+                      </pre>
                     </div>
                     {problem.inputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Input Format</h3>
-                        <pre className="whitespace-pre-wrap">{problem.inputFormat}</pre>
+                        <h3 className="font-semibold text-white/70">
+                          Input Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.inputFormat}
+                        </pre>
                       </div>
                     )}
                     {problem.outputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Output Format</h3>
-                        <pre className="whitespace-pre-wrap">{problem.outputFormat}</pre>
+                        <h3 className="font-semibold text-white/70">
+                          Output Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.outputFormat}
+                        </pre>
                       </div>
                     )}
                     {problem.constraints?.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Constraints</h3>
+                        <h3 className="font-semibold text-white/70">
+                          Constraints
+                        </h3>
                         <ul className="list-disc list-inside">
                           {problem.constraints.map((line, idx) => (
                             <li key={idx}>{line}</li>
@@ -424,12 +495,18 @@ export default function CompilerPage() {
                     )}
                     {problem.examples?.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Examples</h3>
+                        <h3 className="font-semibold text-white/70">
+                          Examples
+                        </h3>
                         {problem.examples.map((ex, idx) => (
                           <div key={idx} className="mb-2">
-                            <p><strong>Input:</strong></p>
+                            <p>
+                              <strong>Input:</strong>
+                            </p>
                             <pre>{ex.input}</pre>
-                            <p><strong>Output:</strong></p>
+                            <p>
+                              <strong>Output:</strong>
+                            </p>
                             <pre>{ex.output}</pre>
                           </div>
                         ))}
@@ -459,7 +536,11 @@ export default function CompilerPage() {
                     title="Auto Format"
                     disabled={isFormatting}
                   >
-                    {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
+                    {isFormatted ? (
+                      <Check className="icon-tick" size={20} />
+                    ) : (
+                      <Wand2 size={20} />
+                    )}
                   </button>
 
                   <button
@@ -497,7 +578,9 @@ export default function CompilerPage() {
               <div className="flex-1 overflow-auto p-2">
                 <CompilerEditor
                   code={code[language]}
-                  setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
+                  setCode={(newCode) =>
+                    setCode((prev) => ({ ...prev, [language]: newCode }))
+                  }
                   language={language}
                   markers={markers}
                 />
@@ -538,14 +621,20 @@ export default function CompilerPage() {
                   title="Auto Format"
                   disabled={isFormatting}
                 >
-                  {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
+                  {isFormatted ? (
+                    <Check className="icon-tick" size={20} />
+                  ) : (
+                    <Wand2 size={20} />
+                  )}
                 </button>
               </div>
             </div>
             <div className="flex-1 overflow-auto p-2">
               <CompilerEditor
                 code={code[language]}
-                setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
+                setCode={(newCode) =>
+                  setCode((prev) => ({ ...prev, [language]: newCode }))
+                }
                 language={language}
                 markers={markers}
               />
@@ -594,9 +683,15 @@ export default function CompilerPage() {
         {!isCompilerOnly && feedback && (
           <div className="mt-6 p-4 rounded bg-red-900/30 border border-red-500">
             <p className="font-semibold text-sm">❌ Failing Test Case</p>
-            <p><strong>Input:</strong> {feedback.input}</p>
-            <p><strong>Expected:</strong> {feedback.expected}</p>
-            <p><strong>Got:</strong> {feedback.actual}</p>
+            <p>
+              <strong>Input:</strong> {feedback.input}
+            </p>
+            <p>
+              <strong>Expected:</strong> {feedback.expected}
+            </p>
+            <p>
+              <strong>Got:</strong> {feedback.actual}
+            </p>
           </div>
         )}
       </div>

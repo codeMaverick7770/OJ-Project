@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
+import GlobalLoader from '../components/GlobalLoader';
 
 export default function Dashboard() {
   const location = useLocation();
@@ -54,13 +55,9 @@ export default function Dashboard() {
     }
   }, [location.state]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+if (loading) {
+  return <GlobalLoader />; 
+}
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">

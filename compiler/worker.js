@@ -14,7 +14,7 @@ const EXECUTION_TIMEOUT_MS = 5000;
 
 async function connectWorker() {
   try {
-    const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://localhost";
+    const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq";
     const connection = await amqp.connect(RABBITMQ_URL);
     const channel = await connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });

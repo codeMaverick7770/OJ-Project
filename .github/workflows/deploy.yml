@@ -27,11 +27,16 @@ jobs:
         run: |
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2 and pull latest code
+      - name: Deploy to EC2, pull latest code, restart services
         run: |
           ssh $EC2_USER@$EC2_HOST << 'EOF'
             cd /home/ec2-user/OJ-Project
             git pull origin main
             npm install --prefix server
             pm2 restart all
+
+            echo "Updating compiler container..."
+            cd /home/ec2-user/OJ-Project/compiler
+            docker compose down
+            docker compose up --build -d
           EOF

@@ -36,7 +36,7 @@ const queueName = 'code_submissions';
 
 async function connectRabbitMQ() {
   try {
-    const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://localhost';
+    const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://rabbitmq';
     connection = await amqp.connect(RABBITMQ_URL);
     channel = await connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });
@@ -121,7 +121,7 @@ async function startServer() {
   await connectRabbitMQ();
 
   const PORT = process.env.PORT || 8001;
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Compiler server running on port ${PORT}`);
   });
 }
