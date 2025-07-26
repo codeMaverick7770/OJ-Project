@@ -1,10 +1,9 @@
-// connectDB.js
 import mongoose from 'mongoose';
 import { MONGO_URI } from '../config/config.js';
 
 export const connectDB = async () => {
   try {
-    console.log('🧪 MONGO_URI from config:', MONGO_URI); // <--- debug
+    console.log('🔍 Connecting with MONGO_URI:', MONGO_URI); // final confirmation
     await mongoose.connect(MONGO_URI);
     console.log('✅ MongoDB connected');
   } catch (error) {
