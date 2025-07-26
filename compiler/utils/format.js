@@ -3,6 +3,8 @@ const path = require('path');
 const { exec } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
 
+const JAVA_FORMATTER_PATH = '/usr/local/bin/google-java-format.jar';
+
 async function formatCode(language, code) {
   const fileId = uuidv4();
   const tempDir = path.join(process.cwd(), 'temp');
@@ -10,51 +12,50 @@ async function formatCode(language, code) {
 
   let extension;
   let command;
-  const fileName = `${fileId}`;
+  const fileBase = `${fileId}`;
+  const filePath = (ext) => path.join(tempDir, `${fileBase}.${ext}`);
 
   switch (language.toLowerCase()) {
     case 'cpp':
     case 'c':
     case 'clang':
       extension = 'cpp';
-      command = `clang-format ${fileName}.cpp -i && cat ${fileName}.cpp`;
+      command = `clang-format -i ${fileBase}.cpp && cat ${fileBase}.cpp`;
       break;
 
     case 'python':
       extension = 'py';
-      command = `autopep8 --in-place ${fileName}.py && cat ${fileName}.py`;
+      command = `autopep8 --in-place ${fileBase}.py && cat ${fileBase}.py`;
       break;
 
     case 'javascript':
       extension = 'js';
-      command = `npx prettier --stdin-filepath ${fileName}.js < ${fileName}.js`;
+      command = `npx prettier --write ${fileBase}.js && cat ${fileBase}.js`;
       break;
 
     case 'java':
       extension = 'java';
-      command = `java -jar /usr/local/bin/google-java-format.jar ${fileName}.java && cat ${fileName}.java`;
+      command = `java -jar ${JAVA_FORMATTER_PATH} ${fileBase}.java && cat ${fileBase}.java`;
       break;
 
     default:
-      throw new Error('Unsupported language');
+      throw new Error(`Unsupported language: ${language}`);
   }
 
-  const filePath = path.join(tempDir, `${fileName}.${extension}`);
-  await fs.writeFile(filePath, code);
+  const fullPath = filePath(extension);
+  await fs.writeFile(fullPath, code);
 
   return new Promise((resolve, reject) => {
     exec(command, { cwd: tempDir }, async (error, stdout, stderr) => {
       try {
-        await fs.unlink(filePath);
-
+        await fs.unlink(fullPath);
         if (error) {
           console.error('Formatting error:', stderr || error.message);
           return reject(new Error(stderr || error.message));
         }
-
         resolve(stdout.trim());
       } catch (cleanupErr) {
-        reject(new Error('Cleanup failed'));
+        reject(new Error('Cleanup failed: ' + cleanupErr.message));
       }
     });
   });
