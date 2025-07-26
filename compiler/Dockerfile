@@ -14,23 +14,19 @@ COPY . .
 # Install system-level dependencies and formatters
 RUN apt update && \
     apt install -y \
-    g++ \
-    clang \
-    clang-format \
-    python3 \
-    python3-pip \
-    default-jdk \
-    curl \
-    git && \
-    # Install Python formatter
+        g++ \
+        clang \
+        clang-format \
+        python3 \
+        python3-pip \
+        default-jdk \
+        curl \
+        git && \
     pip install autopep8 && \
-    # Install JS formatter
     npm install -g prettier && \
-    # Install Java formatter
     curl -L -o /usr/local/bin/google-java-format.jar https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar && \
-    echo '#!/bin/bash\nexec java -jar /usr/local/bin/google-java-format.jar "$@"' > /usr/local/bin/google-java-format && \
+    echo -e '#!/bin/bash\nexec java -jar /usr/local/bin/google-java-format.jar "$@"' > /usr/local/bin/google-java-format && \
     chmod +x /usr/local/bin/google-java-format && \
-    # Clean up
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 

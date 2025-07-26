@@ -15,32 +15,33 @@ async function formatCode(language, code) {
   const fileBase = `${fileId}`;
   const filePath = (ext) => path.join(tempDir, `${fileBase}.${ext}`);
 
-  switch (language.toLowerCase()) {
-    case 'cpp':
-    case 'c':
-    case 'clang':
-      extension = 'cpp';
-      command = `clang-format -i ${fileBase}.cpp && cat ${fileBase}.cpp`;
-      break;
+switch (language.toLowerCase()) {
+  case 'cpp':
+  case 'c':
+  case 'clang':
+    extension = 'cpp';
+    command = `clang-format -i ${fileName}.cpp && cat ${fileName}.cpp`;
+    break;
 
-    case 'python':
-      extension = 'py';
-      command = `autopep8 --in-place ${fileBase}.py && cat ${fileBase}.py`;
-      break;
+  case 'python':
+    extension = 'py';
+    command = `autopep8 --in-place ${fileName}.py && cat ${fileName}.py`;
+    break;
 
-    case 'javascript':
-      extension = 'js';
-      command = `npx prettier --write ${fileBase}.js && cat ${fileBase}.js`;
-      break;
+  case 'javascript':
+    extension = 'js';
+    command = `npx prettier --stdin-filepath ${fileName}.js < ${fileName}.js`;
+    break;
 
-    case 'java':
-      extension = 'java';
-      command = `java -jar ${JAVA_FORMATTER_PATH} ${fileBase}.java && cat ${fileBase}.java`;
-      break;
+  case 'java':
+    extension = 'java';
+    command = `java -jar /usr/local/bin/google-java-format.jar -i ${fileName}.java && cat ${fileName}.java`;
+    break;
 
-    default:
-      throw new Error(`Unsupported language: ${language}`);
-  }
+  default:
+    throw new Error('Unsupported language');
+}
+
 
   const fullPath = filePath(extension);
   await fs.writeFile(fullPath, code);
