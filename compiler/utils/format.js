@@ -3,7 +3,7 @@ const path = require("path");
 const { exec } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
 
-const JAVA_FORMATTER_PATH = "/usr/local/bin/google-java-fformat"; 
+const JAVA_FORMATTER_PATH = "google-java-format"; 
 
 async function formatCode(language, code) {
   const fileId = uuidv4();
