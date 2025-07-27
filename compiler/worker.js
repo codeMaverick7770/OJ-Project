@@ -1,3 +1,4 @@
+const fs = require("fs");
 const amqp = require("amqplib");
 const redisClient = require("./redisClient");
 const { executeCpp } = require("./executeCpp");
@@ -35,6 +36,12 @@ async function connectWorker() {
 
           const codeFilePath = generateFile(language, code, id);
           const inputFilePath = generateInputFile(input, id);
+          if (!fs.existsSync(codeFilePath)) {
+            throw new Error(`Code file not found: ${codeFilePath}`);
+          }
+          if (!fs.existsSync(inputFilePath)) {
+            throw new Error(`Input file not found: ${inputFilePath}`);
+          }
 
           const executorMap = {
             cpp: executeCpp,
@@ -51,11 +58,17 @@ async function connectWorker() {
           const output = await Promise.race([
             executor(codeFilePath, inputFilePath),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Time Limit Exceeded")), EXECUTION_TIMEOUT_MS)
+              setTimeout(
+                () => reject(new Error("Time Limit Exceeded")),
+                EXECUTION_TIMEOUT_MS
+              )
             ),
           ]);
 
-          await redisClient.set(id, JSON.stringify({ status: "completed", output }));
+          await redisClient.set(
+            id,
+            JSON.stringify({ status: "completed", output })
+          );
           console.log("✅ Job completed:", id);
         } catch (err) {
           console.error("❌ Execution error for job", id, ":", err);
@@ -64,7 +77,9 @@ async function connectWorker() {
 
           if (err.message === "Time Limit Exceeded") {
             errorType = "TLE";
-          } else if (/std::bad_alloc|cannot allocate memory|ENOMEM/i.test(stderr)) {
+          } else if (
+            /std::bad_alloc|cannot allocate memory|ENOMEM/i.test(stderr)
+          ) {
             errorType = "Memory Limit Exceeded";
           } else if (/Segmentation fault|SIGSEGV/i.test(stderr)) {
             errorType = "Runtime Error";
