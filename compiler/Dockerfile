@@ -15,6 +15,7 @@ RUN apt update && \
     default-jdk \
     curl \
     git && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     pip install --break-system-packages autopep8 && \
     npm install -g prettier && \
     curl -L -o /usr/local/bin/google-java-format.jar https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar && \

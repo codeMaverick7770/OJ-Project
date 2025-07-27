@@ -2,12 +2,14 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const sanitize = (str) => path.basename(str);
+const sanitize = (str) => path.basename(str).replace(/[^\w.-]/g, ""); // Remove special chars
 
 const executeJava = (filepath, inputPath) => {
-  const jobId = sanitize(filepath).split("_")[0]; // Extract jobId from filename
-  const className = `${jobId}_Main`;               // Match class name with filename
+  const rawFilename = sanitize(filepath);
+  const jobId = rawFilename.split("_")[0]; // Extract jobId from sanitized filename
+  const className = `${jobId}_Main`;       // Match class name with filename
   const containerName = `java-${jobId}`;
+
   const codeFileName = sanitize(filepath);
   const inputFileName = sanitize(inputPath);
 
@@ -17,10 +19,10 @@ const executeJava = (filepath, inputPath) => {
     }
 
     const command = `
-      docker run --rm --name=${containerName} \
+      docker run --rm --name="${containerName}" \
       --cpus="0.5" --memory="128m" --network=none \
-      -v ${filepath}:/app/${codeFileName}:ro \
-      -v ${inputPath}:/app/${inputFileName}:ro \
+      -v "${filepath}":"/app/${codeFileName}":ro \
+      -v "${inputPath}":"/app/${inputFileName}":ro \
       code-runner bash -c "javac /app/${codeFileName} && timeout 4s java -cp /app ${className} < /app/${inputFileName}"
     `;
 
