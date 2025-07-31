@@ -1,7 +1,11 @@
 import './config/config.js';
 import express from 'express';
 import cors from 'cors';
+import passport from 'passport';
 import { connectDB } from './database/connection.js';
+
+import './config/passport.js'; 
+
 import authRoutes from './routes/authRoutes.js';
 import pingRoutes from './routes/pingRoutes.js';
 import problemRoutes from './routes/problemRoutes.js';
@@ -31,16 +35,22 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+
 app.use(express.json());
 
+
+app.use(passport.initialize());
+
+
 app.use('/api', pingRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); 
 app.use('/api/problem', problemRoutes);
 app.use('/api/ai-review', aiRoutes); 
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/visual-ai', aiVisualRoutes);
 app.use('/api/user', userRoutes);
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
