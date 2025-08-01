@@ -8,11 +8,12 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
+  const [showMainContent, setShowMainContent] = useState(false); // New state for loader
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const token = localStorage.getItem('token'); // 🛡️ JWT token from login
+        const token = localStorage.getItem('token');
         if (!token) {
           navigate('/login');
           return;
@@ -27,7 +28,6 @@ export default function Dashboard() {
 
         if (!res.ok) {
           if (res.status === 401 || res.status === 403) {
-            // ⛔ Unauthorized
             localStorage.removeItem('token');
             navigate('/login');
           } else {
@@ -37,6 +37,9 @@ export default function Dashboard() {
 
         const data = await res.json();
         setUser(data);
+
+        // Delay the reveal of main content to show GlobalLoader
+        setTimeout(() => setShowMainContent(true), 1000);
       } catch (err) {
         console.error('Failed to fetch dashboard stats:', err);
       } finally {
@@ -55,9 +58,7 @@ export default function Dashboard() {
     }
   }, [location.state]);
 
-if (loading) {
-  return <GlobalLoader />; 
-}
+  if (loading || !showMainContent) return <GlobalLoader />;
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
@@ -93,7 +94,7 @@ if (loading) {
           <p><span className="text-gray-400">Role:</span> {user?.role}</p>
         </div>
 
-        {/* 📝 Recent Activity (Static for now) */}
+        {/* 📝 Recent Activity */}
         <div className="bg-black/40 border border-white/10 rounded-xl p-6 shadow-inner backdrop-blur-md">
           <h2 className="text-xl font-semibold mb-4 text-purple-300">📈 Recent Activity</h2>
           <ul className="space-y-3 text-sm">

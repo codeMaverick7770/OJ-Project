@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -20,10 +21,9 @@ export default function Register() {
       if (form.password.length > 8) strength += 1;
       if (/[A-Z]/.test(form.password)) strength += 1;
       if (/[0-9]/.test(form.password)) strength += 1;
-      if (/[\W]/.test(form.password)) strength += 1;
+      if (/\W/.test(form.password)) strength += 1;
       return strength;
     };
-
     setPasswordStrength(calculateStrength());
   }, [form.password]);
 
@@ -55,9 +55,7 @@ export default function Register() {
         <div className="flex flex-col items-center space-y-2 mb-6">
           <img src="/assets/kickdsa.png" alt="KickDSA Logo" className="h-6 scale-500 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]" />
           <h2 className="text-3xl font-extrabold gradient-text-dark">Welcome to KickDSA</h2>
-          <p className="text-sm text-gray-600 text-center">
-            Create your free account and start solving.
-          </p>
+          <p className="text-sm text-gray-600 text-center">Create your free account and start solving.</p>
         </div>
 
         {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
@@ -100,20 +98,14 @@ export default function Register() {
               className="w-full px-4 py-2 mt-1 bg-white border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="Create a secure password"
             />
-            
-            {/* Password Strength Progress Bar (Visible only if input has value) */}
             {form.password && (
               <div className="w-full mt-2 h-2 rounded bg-gray-200 overflow-hidden transition-opacity duration-300">
                 <div
                   className={`h-full transition-all duration-500 ${
-                    passwordStrength <= 2
-                      ? 'bg-red-500 w-1/4'
-                      : passwordStrength === 3
-                      ? 'bg-yellow-400 w-2/4'
-                      : passwordStrength === 4
-                      ? 'bg-yellow-500 w-3/4'
-                      : 'bg-green-500 w-full'
-                  }`}
+                    passwordStrength <= 2 ? 'bg-red-500 w-1/4' :
+                    passwordStrength === 3 ? 'bg-yellow-400 w-2/4' :
+                    passwordStrength === 4 ? 'bg-yellow-500 w-3/4' :
+                    'bg-green-500 w-full'}`}
                 />
               </div>
             )}
@@ -126,11 +118,29 @@ export default function Register() {
             Sign Up
           </button>
 
+          <p className="text-xs text-gray-500 flex items-center justify-center">— or sign up with —</p>
+
+          <div className="flex flex-col gap-3 mt-4">
+            <a
+              href={`${import.meta.env.VITE_API_BASE_URL}/auth/google`}
+              className="flex items-center justify-center bg-white border border-gray-300 rounded-md py-2 text-gray-700 hover:bg-gray-100 transition"
+            >
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5 mr-2" />
+              Sign up with Google
+            </a>
+
+            <a
+              href={`${import.meta.env.VITE_API_BASE_URL}/auth/github`}
+              className="flex items-center justify-center bg-gray-900 border border-gray-800 rounded-md py-2 text-white hover:bg-black transition"
+            >
+              <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="w-5 h-5 mr-2" />
+              Sign up with GitHub
+            </a>
+          </div>
+
           <p className="text-sm text-center text-gray-700 mt-4">
             Already have an account?{' '}
-            <a href="/login" className="underline text-purple-500 hover:text-pink-500 transition">
-              Login
-            </a>
+            <a href="/login" className="underline text-purple-500 hover:text-pink-500 transition">Login</a>
           </p>
         </form>
       </div>

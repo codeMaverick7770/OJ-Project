@@ -16,10 +16,12 @@
     "@lottiefiles/react-lottie-player": "^3.6.0",
     "@monaco-editor/react": "^4.7.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@react-oauth/google": "^0.12.2",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.6",
+    "jwt-decode": "^4.0.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.525.0",
     "mermaid": "^11.8.1",
@@ -31,6 +33,7 @@
     "react-router-dom": "^7.6.2",
     "react-simple-code-editor": "^0.14.1",
     "react-split": "^2.0.14",
+    "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {

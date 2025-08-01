@@ -5,9 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>kickDSA | Online Coding Judge Platform</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+
+    <style>
+      /* ✅ Fullscreen dark overlay */
+      #preloader {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      /* ✅ Spinner style */
+      .spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid #222;
+        border-top-color: #fe7587;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
+
   <body>
+    <!-- ✅ Shows immediately on page load -->
+    <div id="preloader">
+      <div class="spinner"></div>
+    </div>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- ✅ Kill preloader after React mounts -->
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+          preloader.style.opacity = '0';
+          preloader.style.transition = 'opacity 0.3s ease';
+          setTimeout(() => preloader.remove(), 300);
+        }
+      });
+    </script>
   </body>
 </html>

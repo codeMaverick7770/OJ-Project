@@ -5,39 +5,48 @@ import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
 import API from './services/api';
 import { Toaster } from 'react-hot-toast';
-import GlobalLoader from './components/GlobalLoader'; // ✅ Import your loader
+import GlobalLoader from './components/GlobalLoader';
+import { ToastProvider } from './context/ToastContext';
+import { useLoading } from './context/LoadingContext'; // ✅ added
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isAppLoading, setIsAppLoading] = useState(true); // renamed for clarity
+  const { loading, message } = useLoading(); 
   useEffect(() => {
-    const minDelay = new Promise(resolve => setTimeout(resolve, 400)); // 400ms minimum
+    const minDelay = new Promise(resolve => setTimeout(resolve, 400));
     const pingServer = API.get('/ping');
 
     Promise.all([minDelay, pingServer])
       .catch(err => console.error('❌ FE-BE connection failed', err))
-      .finally(() => setIsLoading(false)); // both must finish
+      .finally(() => setIsAppLoading(false));
   }, []);
 
-  if (isLoading) return <GlobalLoader />; // ✅ Show loader until done
+  // Loader during initial app boot
+  if (isAppLoading) return <GlobalLoader message="Initializing app..." />;
 
   return (
-    <Router>
-      <Navbar />
-      <AppRoutes />
-      <Footer />
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#1f1f1f',
-            color: '#fff',
-            border: '1px solid #3b3b3b',
-          },
-        }}
-      />
-    </Router>
+    <ToastProvider>
+      <Router>
+        {/* ✅ Global loading context loader */}
+        {loading && <GlobalLoader message={message} />}
+
+        <Navbar />
+        <AppRoutes />
+        <Footer />
+
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1f1f1f',
+              color: '#fff',
+              border: '1px solid #3b3b3b',
+            },
+          }}
+        />
+      </Router>
+    </ToastProvider>
   );
 }
 

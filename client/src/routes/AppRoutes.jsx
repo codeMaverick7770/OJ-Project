@@ -12,6 +12,8 @@ import EditProblem from '../pages/EditProblem';
 import CompilerPage from '../pages/CompilerPage';
 import LeaderboardPage from '../pages/leaderboardPage';
 import PathExplorer from '../pages/PathExplorer';
+import OAuthSuccess from '../pages/OAuthSuccess';
+
 
 export default function AppRoutes() {
   return (
@@ -41,6 +43,8 @@ export default function AppRoutes() {
       <Route path="/solve/:id" element={<CompilerPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route path="/path-explorer" element={<PathExplorer />} />
+      <Route path="/oauth-success" element={<OAuthSuccess />} />
+
     </Routes>
   );
 }

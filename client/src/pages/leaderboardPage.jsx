@@ -4,10 +4,13 @@ import GlobalLoader from "../components/GlobalLoader";
 
 axios.defaults.withCredentials = true;
 
+const PAGE_SIZE = 25;
+
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -30,7 +33,18 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
+  const totalPages = Math.ceil(users.length / PAGE_SIZE);
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
   if (loading) return <GlobalLoader />;
+
   return (
     <div className="min-h-screen relative font-sans text-white">
       {/* Neon background */}
@@ -56,52 +70,88 @@ export default function LeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, index) => (
-                <tr
-                  key={`${user.name}-${index}`}
-                  className={`${
-                    index % 2 === 0 ? "bg-white/5" : "bg-white/10"
-                  } hover:bg-white/20 transition-all duration-200`}
-                >
-                  <td className="p-4 font-bold">
-                    <span
-                      className={`${
-                        index === 0
-                          ? "text-yellow-300"
-                          : index === 1
-                          ? "text-gray-300"
-                          : index === 2
-                          ? "text-orange-400"
-                          : "text-white"
-                      }`}
-                    >
-                      {index === 0
-                        ? "🥇"
-                        : index === 1
-                        ? "🥈"
-                        : index === 2
-                        ? "🥉"
-                        : index + 1}
-                    </span>
-                  </td>
-                  <td className="p-4 font-medium text-purple-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-sm font-bold text-black shadow">
-                        {user.name?.[0]?.toUpperCase() || "U"}
+              {paginatedUsers.map((user, index) => {
+                const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+                return (
+                  <tr
+                    key={`${user.name}-${globalIndex}`}
+                    className={`${
+                      globalIndex % 2 === 0 ? "bg-white/5" : "bg-white/10"
+                    } hover:bg-white/20 transition-all duration-200`}
+                  >
+                    <td className="p-4 font-bold">
+                      <span
+                        className={`${
+                          globalIndex === 0
+                            ? "text-yellow-300"
+                            : globalIndex === 1
+                            ? "text-gray-300"
+                            : globalIndex === 2
+                            ? "text-orange-400"
+                            : "text-white"
+                        }`}
+                      >
+                        {globalIndex === 0
+                          ? "🥇"
+                          : globalIndex === 1
+                          ? "🥈"
+                          : globalIndex === 2
+                          ? "🥉"
+                          : globalIndex + 1}
+                      </span>
+                    </td>
+                    <td className="p-4 font-medium text-purple-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-sm font-bold text-black shadow">
+                          {user.name?.[0]?.toUpperCase() || "U"}
+                        </div>
+                        {user.name}
                       </div>
-                      {user.name}
-                    </div>
-                  </td>
-                  <td className="p-4">{user.solvedCount ?? 0}</td>
-                  <td className="p-4">{user.submissionCount ?? 0}</td>
-                  <td className="p-4 text-green-300 font-semibold">
-                    {user.score ?? 0}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-4">{user.solvedCount ?? 0}</td>
+                    <td className="p-4">{user.submissionCount ?? 0}</td>
+                    <td className="p-4 text-green-300 font-semibold">
+                      {user.score ?? 0}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-white bg-[#252336] border border-white/10 rounded hover:bg-[#3a3750] disabled:opacity-30"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  i + 1 === currentPage
+                    ? "bg-[#7286ff] text-black font-bold"
+                    : "bg-[#252336] text-white hover:bg-[#3a3750]"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-white bg-[#252336] border border-white/10 rounded hover:bg-[#3a3750] disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+        )}
 
         <p className="text-center text-xs text-white/40 mt-6">
           Data updates in real-time during contests.
