@@ -34,7 +34,7 @@ async function formatCode(language, code) {
 
     case "java":
       extension = "java";
-      command = `${JAVA_FORMATTER_PATH} -i "${fileId}.java" && cat "${fileId}.java"`;
+      command = `${JAVA_FORMATTER_PATH} "${fileId}.java" && cat "${fileId}.java"`;
       break;
 
     default:

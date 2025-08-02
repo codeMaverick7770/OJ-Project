@@ -15,11 +15,14 @@ RUN apt update && \
     default-jdk \
     curl \
     git && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
+    # Fix: Create python -> python3 symlink
+    ln -sf /usr/bin/python3 /usr/bin/python && \
+    # Install code formatters
     pip install --break-system-packages autopep8 && \
     npm install -g prettier && \
+    # Add Java formatter (FIXED)
     curl -L -o /usr/local/bin/google-java-format.jar https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar && \
-    echo -e '#!/bin/bash\nexec java -jar /usr/local/bin/google-java-format.jar "$@"' > /usr/local/bin/google-java-format && \
+    printf '#!/bin/bash\nexec java -jar /usr/local/bin/google-java-format.jar "$@"\n' > /usr/local/bin/google-java-format && \
     chmod +x /usr/local/bin/google-java-format && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*

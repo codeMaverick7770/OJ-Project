@@ -26,10 +26,10 @@ services:
       - RABBITMQ_URL=amqp://rabbitmq
 
   redis:
-    image: redis:latest
+    image: redis:7.2
     ports:
       - "6379:6379"
-
+      
   rabbitmq:
     image: rabbitmq:3-management
     ports:
