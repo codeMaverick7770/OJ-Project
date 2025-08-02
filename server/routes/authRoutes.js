@@ -17,6 +17,7 @@ router.get(
 );
 
 // Google OAuth callback
+// Google OAuth callback
 router.get(
   '/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
@@ -25,7 +26,7 @@ router.get(
       {
         id: req.user._id,
         role: req.user.role || 'user',
-        isNew: req.user.isNew || false, // ✅ include isNew in JWT
+        isNew: req.user.isNew || false,
       },
       JWT_SECRET,
       { expiresIn: '1d' }
@@ -33,6 +34,9 @@ router.get(
 
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const redirectUrl = `${clientUrl}/oauth-success?token=${token}`;
+
+    console.log('✅ Google OAuth successful');
+    console.log('🔁 Redirecting to:', redirectUrl);
 
     return res.redirect(redirectUrl);
   }

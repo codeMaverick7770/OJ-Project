@@ -51,6 +51,7 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/visual-ai', aiVisualRoutes);
 app.use('/api/user', userRoutes);
 
+console.log('✅ Loading authRoutes:', typeof authRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
