@@ -42,4 +42,9 @@ router.get(
   }
 );
 
+router.get('/test', (req, res) => {
+  res.send('✅ /api/auth routes working');
+});
+
+
 export default router;
