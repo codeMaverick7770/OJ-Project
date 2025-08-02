@@ -20,6 +20,7 @@ async function connectWorker() {
     const channel = await connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });
 
+    console.log("🐰 Connecting to:", process.env.RABBITMQ_URL);
     console.log("🔧 Worker is listening for jobs...");
 
     channel.consume(
