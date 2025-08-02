@@ -14,16 +14,16 @@ services:
     environment:
       - REDIS_URL=${REDIS_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
-  worker:
-    build: .
-    depends_on:
-      - redis
-      - rabbitmq
-    restart: unless-stopped
-    command: ["node", "worker.js"]
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://rabbitmq
+  # worker:
+  #   build: .
+  #   depends_on:
+  #     - redis
+  #     - rabbitmq
+  #   restart: unless-stopped
+  #   command: ["node", "worker.js"]
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #     - RABBITMQ_URL=amqp://rabbitmq
 
   redis:
     image: redis:7.2

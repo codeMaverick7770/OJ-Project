@@ -1,4 +1,4 @@
-import './loadEnv.js';
+import './server/loadEnv.js';
 import './config/config.js';
 import express from 'express';
 import cors from 'cors';
