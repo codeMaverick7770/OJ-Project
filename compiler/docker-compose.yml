@@ -10,7 +10,7 @@ services:
       - rabbitmq
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.docker
     environment:
       - REDIS_URL=${REDIS_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}

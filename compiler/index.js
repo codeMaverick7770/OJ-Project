@@ -7,7 +7,9 @@ const redisClient = require('./redisClient');
 require('./cleanup');
 const { formatCode } = require('./utils/format');
 
-dotenv.config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env.host') });
+
 
 const app = express();
 app.use(express.json());

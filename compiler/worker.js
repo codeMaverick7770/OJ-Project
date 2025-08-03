@@ -1,5 +1,6 @@
 const fs = require("fs");
 const amqp = require("amqplib");
+const path = require('path');
 const redisClient = require("./redisClient");
 const { executeCpp } = require("./executeCpp");
 const { executeJavascript } = require("./executeJavascript");
@@ -7,7 +8,7 @@ const { executePython } = require("./executePython");
 const { executeJava } = require("./executeJava");
 const { generateFile } = require("./generateFile");
 const { generateInputFile } = require("./generateInputFile");
-require("dotenv").config();
+require('dotenv').config({ path: path.join(__dirname, '.env.host') });
 require("./cleanup");
 
 const queueName = "code_submissions";
