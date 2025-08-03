@@ -1,5 +1,6 @@
 const { createClient } = require("redis");
-require("dotenv").config();
+require("dotenv").config({ path: ".env.docker" });
+
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
