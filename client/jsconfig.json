@@ -4,5 +4,9 @@
     "paths": {
       "@/*": ["src/*"]
     }
+  },
+  "include": ["src"],
+  "typeAcquisition": {
+    "enable": false
   }
 }
