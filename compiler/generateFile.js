@@ -11,8 +11,13 @@ const generateFile = (language, content, jobId) => {
   let filename;
 
   if (language === "java") {
-    filename = `${jobId}_Main.java`; 
-    content = content.replace(/public\s+class\s+Main/, `public class ${jobId}_Main`);
+    // Sanitize jobId to ensure valid Java identifier
+    const safeId = jobId.replace(/[^a-zA-Z0-9]/g, "");
+    const className = `Main_${safeId}`;
+    filename = `${className}.java`;
+
+    // Replace 'public class Main' with 'public class Main_XXXXX'
+    content = content.replace(/public\s+class\s+Main/, `public class ${className}`);
   } else {
     filename = `${jobId}.${language}`;
   }
