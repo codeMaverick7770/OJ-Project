@@ -8,8 +8,10 @@ const { executePython } = require("./executePython");
 const { executeJava } = require("./executeJava");
 const { generateFile } = require("./generateFile");
 const { generateInputFile } = require("./generateInputFile");
-require('dotenv').config({ path: path.join(__dirname, '.env.host') });
 require("./cleanup");
+
+const envFile = process.env.NODE_ENV === 'docker' ? '.env.docker' : '.env.host';
+require('dotenv').config({ path: path.join(__dirname, envFile) });
 
 const queueName = "code_submissions";
 const EXECUTION_TIMEOUT_MS = 5000;

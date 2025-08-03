@@ -8,8 +8,8 @@ require('./cleanup');
 const { formatCode } = require('./utils/format');
 
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env.host') });
-
+const envFile = process.env.NODE_ENV === 'docker' ? '.env.docker' : '.env.host';
+require('dotenv').config({ path: path.join(__dirname, envFile) });
 
 const app = express();
 app.use(express.json());
