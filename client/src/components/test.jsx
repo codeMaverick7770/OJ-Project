@@ -84,6 +84,7 @@ async function pollJobStatus(jobId, onResult, timeout = 15000) {
     try {
       const compilerBase =
         import.meta.env.VITE_COMPILER_URL || "http://localhost:8001";
+      // Assuming VITE_COMPILER_URL is base, add /run/status/ path explicitly
       const { data } = await axios.get(`${compilerBase}/status/${jobId}`, {
         withCredentials: true,
       });
@@ -106,9 +107,9 @@ async function pollJobStatus(jobId, onResult, timeout = 15000) {
 }
 
 const OutputContainer = ({ children, runMode }) => (
-  <div className="glass-dark flex flex-col h-full rounded-lg overflow-hidden">
-    <div className="flex items-center justify-between px-4 py-2 border-b border-[#7286ff]/20">
-      <div className="font-medium text-sm text-white/90">
+  <div className="flex flex-col h-full bg-[#1c1c2a] rounded-lg overflow-hidden border border-[#6C00FF]/30">
+    <div className="flex items-center justify-between px-4 py-2 bg-[#2a2a3d] border-b border-[#6C00FF]/20">
+      <div className="font-medium text-sm text-[#a0a0d0]">
         {runMode === "example" ? "Test Cases" : "Output"}
       </div>
       <div className="flex space-x-1">
@@ -122,7 +123,7 @@ const OutputContainer = ({ children, runMode }) => (
 );
 
 const TestCaseResult = ({ index, result }) => (
-  <div className={`p-3 border-b border-[#7286ff]/10 ${index % 2 === 0 ? 'bg-[#1c1c2a]/30' : 'bg-[#1c1c2a]/10'}`}>
+  <div className={`p-3 border-b border-[#6C00FF]/10 ${index % 2 === 0 ? 'bg-[#1e1e2e]' : 'bg-[#1c1c2a]'}`}>
     <div className="flex items-center">
       <div className={`w-6 h-6 flex items-center justify-center rounded-full mr-2 ${result.pass ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
         {result.pass ? (
@@ -143,17 +144,17 @@ const TestCaseResult = ({ index, result }) => (
     {!result.pass && (
       <div className="mt-2 pl-8 space-y-2">
         <div>
-          <div className="text-xs text-white/70 mb-1">Input</div>
-          <div className="text-sm bg-[#2a2a3d]/50 p-2 rounded font-mono text-white/90">{result.input || "N/A"}</div>
+          <div className="text-xs text-[#a0a0d0] mb-1">Input</div>
+          <div className="text-sm bg-[#2a2a3d] p-2 rounded font-mono">{result.input || "N/A"}</div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-xs text-white/70 mb-1">Expected</div>
-            <div className="text-sm bg-[#2a2a3d]/50 p-2 rounded font-mono text-white/90">{result.expected || "N/A"}</div>
+            <div className="text-xs text-[#a0a0d0] mb-1">Expected</div>
+            <div className="text-sm bg-[#2a2a3d] p-2 rounded font-mono">{result.expected || "N/A"}</div>
           </div>
           <div>
-            <div className="text-xs text-white/70 mb-1">Actual</div>
-            <div className="text-sm bg-[#2a2a3d]/50 p-2 rounded font-mono text-white/90">{result.actual || "N/A"}</div>
+            <div className="text-xs text-[#a0a0d0] mb-1">Actual</div>
+            <div className="text-sm bg-[#2a2a3d] p-2 rounded font-mono">{result.actual || "N/A"}</div>
           </div>
         </div>
       </div>
@@ -182,6 +183,7 @@ export default function CompilerPage() {
   const [isFormatting, setIsFormatting] = useState(false);
   const [isFormatted, setIsFormatted] = useState(false);
   const [markers, setMarkers] = useState([]);
+  const [outputHeight, setOutputHeight] = useState(200); // Default output height
 
   useEffect(() => {
     if (id && !isCompilerOnly) {
@@ -489,10 +491,10 @@ export default function CompilerPage() {
       <div className="relative z-10 pt-20 px-4">
         {!isCompilerOnly ? (
           <Split
-            className="flex h-[80vh] rounded-xl overflow-hidden"
-            sizes={[25, 75]}
-            minSize={[250, 300]}
-            gutterSize={8}
+            className="flex h-[80vh]"
+            sizes={[40, 60]}
+            minSize={300}
+            gutterSize={6}
             gutterAlign="center"
             cursor="col-resize"
             gutter={() => {
@@ -501,8 +503,7 @@ export default function CompilerPage() {
               return gutter;
             }}
           >
-            {/* Problem description pane */}
-            <div className="glass-dark p-6 overflow-auto text-white/90 text-sm custom-scroll border border-[#7286ff]/20 shadow-[0_0_15px_#7286ffaa]">
+            <div className="glass-dark p-6 overflow-auto rounded-xl text-white/90 text-base custom-scroll border border-[#7286ff]/20 shadow-[0_0_10px_#7286ff33]">
               {problem && (
                 <>
                   <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-md">
@@ -510,24 +511,38 @@ export default function CompilerPage() {
                   </h2>
                   <section className="space-y-4">
                     <div>
-                      <h3 className="font-semibold text-white/70">Description</h3>
-                      <pre className="whitespace-pre-wrap">{problem.description}</pre>
+                      <h3 className="font-semibold text-white/70">
+                        Description
+                      </h3>
+                      <pre className="whitespace-pre-wrap">
+                        {problem.description}
+                      </pre>
                     </div>
                     {problem.inputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Input Format</h3>
-                        <pre className="whitespace-pre-wrap">{problem.inputFormat}</pre>
+                        <h3 className="font-semibold text-white/70">
+                          Input Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.inputFormat}
+                        </pre>
                       </div>
                     )}
                     {problem.outputFormat && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Output Format</h3>
-                        <pre className="whitespace-pre-wrap">{problem.outputFormat}</pre>
+                        <h3 className="font-semibold text-white/70">
+                          Output Format
+                        </h3>
+                        <pre className="whitespace-pre-wrap">
+                          {problem.outputFormat}
+                        </pre>
                       </div>
                     )}
                     {problem.constraints?.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Constraints</h3>
+                        <h3 className="font-semibold text-white/70">
+                          Constraints
+                        </h3>
                         <ul className="list-disc list-inside">
                           {problem.constraints.map((line, idx) => (
                             <li key={idx}>{line}</li>
@@ -537,12 +552,18 @@ export default function CompilerPage() {
                     )}
                     {problem.examples?.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-white/70">Examples</h3>
+                        <h3 className="font-semibold text-white/70">
+                          Examples
+                        </h3>
                         {problem.examples.map((ex, idx) => (
                           <div key={idx} className="mb-2">
-                            <p><strong>Input:</strong></p>
+                            <p>
+                              <strong>Input:</strong>
+                            </p>
                             <pre>{ex.input}</pre>
-                            <p><strong>Output:</strong></p>
+                            <p>
+                              <strong>Output:</strong>
+                            </p>
                             <pre>{ex.output}</pre>
                           </div>
                         ))}
@@ -553,99 +574,134 @@ export default function CompilerPage() {
               )}
             </div>
 
-            {/* Editor and output panes */}
-            <Split
-              className="flex flex-col h-full rounded-xl overflow-hidden"
-              sizes={[65, 35]}
-              minSize={[300, 150]}
-              gutterSize={6}
-              gutterAlign="center"
-              cursor="row-resize"
-              direction="vertical"
-              gutter={() => {
-                const gutter = document.createElement("div");
-                gutter.className = "split-gutter-horizontal";
-                return gutter;
-              }}
-            >
-              {/* Editor container */}
-              <div className="glass-dark rounded-xl flex flex-col p-4">
-                <div className="flex justify-between items-center">
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="neon-select"
-                  >
-                    <option value="cpp">C++</option>
-                    <option value="java">Java</option>
-                    <option value="python">Python</option>
-                    <option value="javascript">Javascript</option>
-                  </select>
-                  <div className="flex gap-2">
-                    <button
-                      className="icon-btn"
-                      onClick={beautifyCode}
-                      title="Auto Format"
-                      disabled={isFormatting}
-                    >
-                      {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
-                    </button>
-
-                    <button
-                      onClick={() => setShowAiModal(true)}
-                      className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
-                    >
-                      AI Code Review
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex justify-center gap-3 mt-2">
+            <div className="glass-dark rounded-xl flex flex-col">
+              <div className="flex justify-between items-center px-4 pt-2">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="neon-select"
+                >
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                  <option value="javascript">Javascript</option>
+                </select>
+                <div className="flex gap-2">
                   <button
-                    className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${runMode === "example" ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white" : "bg-transparent border border-white text-white hover:bg-white hover:text-black"}`}
-                    onClick={() => setRunMode("example")}
+                    className="icon-btn"
+                    onClick={beautifyCode}
+                    title="Auto Format"
+                    disabled={isFormatting}
                   >
-                    Example Test Cases
+                    {isFormatted ? (
+                      <Check className="icon-tick" size={20} />
+                    ) : (
+                      <Wand2 size={20} />
+                    )}
                   </button>
+
                   <button
-                    className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${runMode === "custom" ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white" : "bg-transparent border border-white text-white hover:bg-white hover:text-black"}`}
-                    onClick={() => setRunMode("custom")}
+                    onClick={() => setShowAiModal(true)}
+                    className="ai-review-glow px-4 py-1.5 text-xs font-bold rounded-md tracking-wide"
                   >
-                    Custom Input
+                    AI Code Review
                   </button>
                 </div>
+              </div>
 
-                <div className="flex-1 min-h-0 flex flex-col mt-2">
-                  <div className="flex-1 overflow-hidden rounded">
-                    <CompilerEditor
-                      code={code[language]}
-                      setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
-                      language={language}
-                      markers={markers}
+              <div className="flex justify-center gap-3 mt-2">
+                <button
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    runMode === "example"
+                      ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                      : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                  }`}
+                  onClick={() => setRunMode("example")}
+                >
+                  Example Test Cases
+                </button>
+                <button
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    runMode === "custom"
+                      ? "bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white"
+                      : "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                  }`}
+                  onClick={() => setRunMode("custom")}
+                >
+                  Custom Input
+                </button>
+              </div>
+
+              <div className="flex-1 min-h-0 flex flex-col mt-2">
+                <div className="flex-1 overflow-hidden">
+                  <CompilerEditor
+                    code={code[language]}
+                    setCode={(newCode) =>
+                      setCode((prev) => ({ ...prev, [language]: newCode }))
+                    }
+                    language={language}
+                    markers={markers}
+                  />
+                </div>
+                
+                {runMode === "custom" && (
+                  <div className="mt-2">
+                    <textarea
+                      className="bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
+                      rows={3}
+                      placeholder="Standard Input..."
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
                     />
                   </div>
-
-                  {runMode === "custom" && (
-                    <div className="mt-2">
-                      <textarea
-                        className="bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50 resize-none"
-                        rows={3}
-                        placeholder="Standard Input..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                      />
+                )}
+                
+                {/* Vertical splitter for output area */}
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-1 w-24 bg-[#6C00FF]/30 rounded-full cursor-row-resize"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const startY = e.clientY;
+                        const startHeight = outputHeight;
+                        
+                        const handleMouseMove = (moveEvent) => {
+                          const delta = moveEvent.clientY - startY;
+                          const newHeight = Math.max(100, Math.min(500, startHeight + delta));
+                          setOutputHeight(newHeight);
+                        };
+                        
+                        const handleMouseUp = () => {
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
+                        
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                      }}
+                    >
+                      <div className="flex justify-center">
+                        <svg className="w-4 h-1 text-[#6C00FF]/60" viewBox="0 0 16 4" fill="none">
+                          <circle cx="2" cy="2" r="2" fill="currentColor" />
+                          <circle cx="8" cy="2" r="2" fill="currentColor" />
+                          <circle cx="14" cy="2" r="2" fill="currentColor" />
+                        </svg>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+                
+                <div style={{ height: `${outputHeight}px` }} className="overflow-hidden">
+                  <OutputContainer runMode={runMode}>
+                    <OutputBox
+                      output={output}
+                      runMode={runMode}
+                      exampleResults={exampleResults}
+                    />
+                  </OutputContainer>
                 </div>
               </div>
-
-              {/* Output container */}
-              <div className="glass-dark rounded-xl p-4 flex flex-col">
-                <OutputContainer runMode={runMode}>
-                  <OutputBox output={output} runMode={runMode} exampleResults={exampleResults} />
-                </OutputContainer>
-              </div>
-            </Split>
+            </div>
           </Split>
         ) : (
           <div className="glass-dark rounded-xl flex flex-col h-[80vh]">
@@ -667,7 +723,11 @@ export default function CompilerPage() {
                   title="Auto Format"
                   disabled={isFormatting}
                 >
-                  {isFormatted ? <Check className="icon-tick" size={20} /> : <Wand2 size={20} />}
+                  {isFormatted ? (
+                    <Check className="icon-tick" size={20} />
+                  ) : (
+                    <Wand2 size={20} />
+                  )}
                 </button>
               </div>
             </div>
@@ -675,12 +735,14 @@ export default function CompilerPage() {
               <div className="flex-1 overflow-hidden">
                 <CompilerEditor
                   code={code[language]}
-                  setCode={(newCode) => setCode((prev) => ({ ...prev, [language]: newCode }))}
+                  setCode={(newCode) =>
+                    setCode((prev) => ({ ...prev, [language]: newCode }))
+                  }
                   language={language}
                   markers={markers}
                 />
               </div>
-
+              
               <div className="mt-2">
                 <textarea
                   className="bg-[#282846] w-full rounded p-2 text-sm border border-[#6C00FF] text-white placeholder:text-white/50"
@@ -690,10 +752,49 @@ export default function CompilerPage() {
                   onChange={(e) => setInput(e.target.value)}
                 />
               </div>
-
-              <div className="glass-dark rounded-xl p-4 flex flex-col mt-2">
+              
+              {/* Vertical splitter for output area */}
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-1 w-24 bg-[#6C00FF]/30 rounded-full cursor-row-resize"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      const startY = e.clientY;
+                      const startHeight = outputHeight;
+                      
+                      const handleMouseMove = (moveEvent) => {
+                        const delta = moveEvent.clientY - startY;
+                        const newHeight = Math.max(100, Math.min(500, startHeight + delta));
+                        setOutputHeight(newHeight);
+                      };
+                      
+                      const handleMouseUp = () => {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                      };
+                      
+                      document.addEventListener('mousemove', handleMouseMove);
+                      document.addEventListener('mouseup', handleMouseUp);
+                    }}
+                  >
+                    <div className="flex justify-center">
+                      <svg className="w-4 h-1 text-[#6C00FF]/60" viewBox="0 0 16 4" fill="none">
+                        <circle cx="2" cy="2" r="2" fill="currentColor" />
+                        <circle cx="8" cy="2" r="2" fill="currentColor" />
+                        <circle cx="14" cy="2" r="2" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div style={{ height: `${outputHeight}px` }} className="overflow-hidden">
                 <OutputContainer runMode={runMode}>
-                  <OutputBox output={output} runMode={runMode} exampleResults={exampleResults} />
+                  <OutputBox
+                    output={output}
+                    runMode={runMode}
+                    exampleResults={exampleResults}
+                  />
                 </OutputContainer>
               </div>
             </div>
@@ -744,33 +845,25 @@ export default function CompilerPage() {
 
       <style>{`
         .split-gutter {
-          background: transparent;
-          width: 6px;
+          background: #999;
+          width: 4px;
           transition: all 0.2s ease;
-          border-radius: 3px;
         }
         .split-gutter:hover {
+          width: 8px;
           background: linear-gradient(180deg, #7286ff, #fe7587);
-          width: 10px;
         }
 
-        .split-gutter-horizontal {
-          background: transparent;
-          height: 6px;
-          cursor: row-resize;
-          border-radius: 3px;
-          transition: all 0.2s ease;
-        }
-        .split-gutter-horizontal:hover {
-          background: linear-gradient(90deg, #7286ff, #fe7587);
-          height: 10px;
+        .glass-light {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .glass-dark {
-          background: rgba(20, 20, 30, 0.7);
+          background: rgba(20, 20, 30, 0.6);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 12px rgba(114, 134, 255, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .run-btn {
@@ -879,45 +972,47 @@ export default function CompilerPage() {
           }
         }
         .icon-btn {
-          background: transparent;
-          border: none;
-          color: white;
-          cursor: pointer;
-          padding: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: transform 0.2s ease, box-shadow 0.3s ease;
-          border-radius: 6px;
-        }
+        background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  border-radius: 6px;
+}
 
-        .icon-btn:hover {
-          transform: scale(1.1);
-          box-shadow: 0 0 10px rgba(255, 255, 255, 0.25),
-                      0 0 20px rgba(114, 134, 255, 0.25),
-                      0 0 30px rgba(254, 117, 135, 0.15);
-        }
+.icon-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25),
+              0 0 20px rgba(114, 134, 255, 0.25),
+              0 0 30px rgba(254, 117, 135, 0.15);
+}
 
-        .icon-btn:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-        }
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 
-        .icon-tick {
-          animation: tickFade 0.3s ease;
-          color: white;
-        }
+/* Optional tick animation */
+.icon-tick {
+  animation: tickFade 0.3s ease;
+  color: white;
+}
 
-        @keyframes tickFade {
-          from {
-            transform: scale(0.8);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
+@keyframes tickFade {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
       `}</style>
     </div>
   );

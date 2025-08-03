@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-import { ClipboardIcon } from "@heroicons/react/24/outline";
+import { ClipboardIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 function parseOutput(output) {
   if (typeof output === "string") {
@@ -15,6 +15,7 @@ function parseOutput(output) {
 
 export default function OutputBox({ output, exampleResults = [], runMode }) {
   const [copied, setCopied] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text || "");
@@ -23,43 +24,89 @@ export default function OutputBox({ output, exampleResults = [], runMode }) {
     setTimeout(() => setCopied(false), 800);
   };
 
+  const toggleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   // 🧪 EXAMPLE TEST CASE MODE
   if (runMode === "example" && Array.isArray(exampleResults) && exampleResults.length > 0) {
     return (
-      <div className="glass-card mt-4 p-4 text-sm">
+      <div className="space-y-2">
         {exampleResults.map((res, i) => (
-          <details key={i} open={!res.pass} className="mb-3">
-            <summary
-              className={`cursor-pointer font-semibold ${
-                res.pass ? "text-green-300" : "text-red-300"
-              }`}
+          <div 
+            key={i} 
+            className={`rounded-lg border ${res.pass ? 'border-green-500/30' : 'border-red-500/30'} overflow-hidden transition-all duration-200`}
+          >
+            <div 
+              className={`flex items-center justify-between p-3 cursor-pointer ${res.pass ? 'bg-green-900/10' : 'bg-red-900/10'}`}
+              onClick={() => toggleExpand(i)}
             >
-              Case {i + 1}: {res.pass ? "✅ Passed" : "❌ Failed"}
-            </summary>
-            <div className="mt-2 pl-4 space-y-1">
-              <pre>
-                <strong>Input:</strong> {res.input || "N/A"}
-              </pre>
-              <pre>
-                <strong>Expected:</strong> {res.expected || "N/A"}
-              </pre>
-              <pre className="flex gap-2 items-center">
-                <strong>Got:</strong>{" "}
-                <span className="flex-1 break-all">{res.actual || "N/A"}</span>
-                <div className="relative group">
-                  <ClipboardIcon
-                    onClick={() => handleCopy(res.actual)}
-                    className={`w-4 h-4 cursor-pointer text-white/60 hover:text-white transition-transform ${
-                      copied ? "scale-110" : ""
-                    }`}
-                  />
-                  <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-xs text-white bg-black px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition">
-                    Copy
+              <div className="flex items-center">
+                <div className={`w-6 h-6 flex items-center justify-center rounded-full mr-3 ${res.pass ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                  {res.pass ? (
+                    <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+                <div className="font-medium">
+                  <span className="text-white/80">Test Case {i + 1}</span>
+                  <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${res.pass ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                    {res.pass ? 'Passed' : 'Failed'}
                   </span>
                 </div>
-              </pre>
+              </div>
+              <div className="text-white/60">
+                {expandedIndex === i ? (
+                  <ChevronUpIcon className="w-4 h-4" />
+                ) : (
+                  <ChevronDownIcon className="w-4 h-4" />
+                )}
+              </div>
             </div>
-          </details>
+            
+            {expandedIndex === i && (
+              <div className="p-4 bg-[#1c1c2a]/50 border-t border-[#7286ff]/10">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs text-white/60 mb-1">Input</div>
+                    <div className="text-sm bg-[#2a2a3d]/50 p-3 rounded font-mono text-white/90">
+                      {res.input || "N/A"}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Expected Output</div>
+                      <div className="text-sm bg-[#2a2a3d]/50 p-3 rounded font-mono text-white/90">
+                        {res.expected || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Your Output</div>
+                      <div className="text-sm bg-[#2a2a3d]/50 p-3 rounded font-mono text-white/90">
+                        {res.actual || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleCopy(res.actual)}
+                      className="flex items-center text-xs text-white/60 hover:text-white transition-colors"
+                    >
+                      <ClipboardIcon className="w-4 h-4 mr-1" />
+                      Copy Output
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
     );
@@ -99,40 +146,43 @@ export default function OutputBox({ output, exampleResults = [], runMode }) {
     };
 
     return (
-      <div className="glass-card mt-4 p-4 text-sm">
-        {status === "error" ? (
-          <div className="text-red-400 whitespace-pre-wrap break-words">
-            <strong className="block mb-1">❌ Error:</strong>
-            <div className="mb-1">{renderErrorMessage()}</div>
-            {error && !errorType && <div className="text-white/60">{error}</div>}
+      <div className="rounded-lg border border-[#7286ff]/20 overflow-hidden">
+        <div className="flex items-center justify-between p-3 bg-[#2a2a3d]/50 border-b border-[#7286ff]/10">
+          <div className="text-sm font-medium text-white/80">
+            {status === "error" ? "Error" : "Output"}
           </div>
-        ) : (
-          <pre className="whitespace-pre-wrap break-words">{finalOutput || "No output"}</pre>
-        )}
-
-        {/* Execution Time */}
-        {execTime && (
-          <div className="mt-1 text-right text-xs text-white/50">
-            ⏱️ Exec Time: {execTime}
-          </div>
-        )}
-
-        {/* Copy Icon */}
-        {(finalOutput || error) && (
-          <div className="mt-2 flex justify-end">
-            <div className="relative group">
-              <ClipboardIcon
+          <div className="flex items-center space-x-2">
+            {execTime && (
+              <div className="text-xs text-white/60">
+                ⏱️ {execTime}
+              </div>
+            )}
+            {(finalOutput || error) && (
+              <button
                 onClick={() => handleCopy(finalOutput || error)}
-                className={`w-5 h-5 text-white/60 cursor-pointer hover:text-white transition-transform ${
-                  copied ? "scale-110" : ""
-                }`}
-              />
-              <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-xs text-white bg-black px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition">
+                className="flex items-center text-xs text-white/60 hover:text-white transition-colors"
+              >
+                <ClipboardIcon className="w-4 h-4 mr-1" />
                 Copy
-              </span>
-            </div>
+              </button>
+            )}
           </div>
-        )}
+        </div>
+        
+        <div className="p-4 bg-[#1c1c2a]/50">
+          {status === "error" ? (
+            <div className="text-red-400 whitespace-pre-wrap break-words">
+              <div className="mb-2">{renderErrorMessage()}</div>
+              {error && !errorType && (
+                <div className="text-sm text-white/60 mt-2">{error}</div>
+              )}
+            </div>
+          ) : (
+            <pre className="whitespace-pre-wrap break-words text-white/90">
+              {finalOutput || "No output"}
+            </pre>
+          )}
+        </div>
       </div>
     );
   }
