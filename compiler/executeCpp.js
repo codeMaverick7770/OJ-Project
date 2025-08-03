@@ -2,9 +2,6 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const outputPath = path.join(__dirname, "outputs");
-if (!fs.existsSync(outputPath)) fs.mkdirSync(outputPath, { recursive: true });
-
 const sanitize = (str) => path.basename(str);
 
 const executeCpp = (filepath, inputPath) => {
@@ -19,7 +16,7 @@ const executeCpp = (filepath, inputPath) => {
       --cpus="0.5" --memory="128m" --network=none \
       -v ${filepath}:/app/${codeFileName}:ro \
       -v ${inputPath}:/app/${inputFileName}:ro \
-      code-runner bash -c "g++ /app/${codeFileName} -o /app/a.out && timeout 4s /app/a.out < /app/${inputFileName}"
+      029864682293.dkr.ecr.eu-north-1.amazonaws.com/code-runner bash -c "g++ /app/${codeFileName} -o /app/a.out && timeout 4s /app/a.out < /app/${inputFileName}"
     `;
 
     exec(command, { timeout: 7000 }, (error, stdout, stderr) => {

@@ -2,12 +2,12 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const sanitize = (str) => path.basename(str).replace(/[^\w.-]/g, ""); // Remove special chars
+const sanitize = (str) => path.basename(str).replace(/[^\w.-]/g, "");
 
 const executeJava = (filepath, inputPath) => {
   const rawFilename = sanitize(filepath);
-  const jobId = rawFilename.split("_")[0]; // Extract jobId from sanitized filename
-  const className = `${jobId}_Main`;       // Match class name with filename
+  const jobId = rawFilename.split("_")[0];
+  const className = `${jobId}_Main`;
   const containerName = `java-${jobId}`;
 
   const codeFileName = sanitize(filepath);
@@ -23,7 +23,7 @@ const executeJava = (filepath, inputPath) => {
       --cpus="0.5" --memory="128m" --network=none \
       -v "${filepath}":"/app/${codeFileName}":ro \
       -v "${inputPath}":"/app/${inputFileName}":ro \
-      code-runner bash -c "javac /app/${codeFileName} && timeout 4s java -cp /app ${className} < /app/${inputFileName}"
+      029864682293.dkr.ecr.eu-north-1.amazonaws.com/code-runner bash -c "javac /app/${codeFileName} && timeout 4s java -cp /app ${className} < /app/${inputFileName}"
     `;
 
     exec(command, { timeout: 7000 }, (error, stdout, stderr) => {
