@@ -8,12 +8,7 @@ import AIHelpModal from '../components/AIHelpModal';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { Wand2, Check } from 'lucide-react';
 import Split from 'react-split';
-import 'katex/dist/katex.min.css';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeSanitize from 'rehype-sanitize';
+import { simpleRenderer } from '../utils/simpleRenderer.jsx';
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello, World!\";\n  return 0;\n}`,
@@ -457,6 +452,12 @@ export default function CompilerPage() {
 
   const renderProblemDescription = () => {
     if (!problem) return null;
+    
+    // Debug: Log the description to see what we're getting
+    console.log('🔍 Problem Description:', problem.description);
+    console.log('🔍 Description type:', typeof problem.description);
+    console.log('🔍 Description length:', problem.description?.length);
+    
     return (
       <div className="space-y-6 text-white font-sans">
         <h2 className="text-2xl font-extrabold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-lg">
@@ -468,22 +469,17 @@ export default function CompilerPage() {
               <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
               Description
             </h3>
-            <div className="text-white text-sm leading-relaxed">
-              <ReactMarkdown
-                children={problem.description}
-                remarkPlugins={[remarkMath]}
-                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSanitize]}
-                components={{
-                  img: ({node, ...props}) => (
-                    <img {...props} style={{maxWidth: '100%', borderRadius: '8px', margin: '12px 0'}} alt={props.alt || ''} />
-                  ),
-                  code: ({node, inline, className, children, ...props}) => (
-                    <code className={className} style={{background: '#232347', color: '#ffb4d0', borderRadius: '4px', padding: '2px 6px', fontSize: '0.95em'}} {...props}>
-                      {children}
-                    </code>
-                  )
-                }}
-              />
+            
+            {/* Debug: Show raw content */}
+            <details className="mb-4">
+              <summary className="text-xs text-yellow-400 cursor-pointer">🔍 Debug: Show Raw Content</summary>
+              <pre className="text-xs bg-black/50 p-2 rounded mt-2 overflow-auto max-h-40">
+                {JSON.stringify(problem.description, null, 2)}
+              </pre>
+            </details>
+            
+            <div className="text-white text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+              {simpleRenderer.render(problem.description)}
             </div>
           </div>
 

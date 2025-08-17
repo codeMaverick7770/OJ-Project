@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeSanitize from 'rehype-sanitize';
-import 'katex/dist/katex.min.css';
+import { simpleRenderer } from '../utils/simpleRenderer.jsx';
 
 export default function CreateProblem() {
   const [mode, setMode] = useState('single'); // 'single' or 'bulk'
@@ -162,23 +157,19 @@ export default function CreateProblem() {
         )}
         {/* Preview area */}
         {showPreview && mode === 'single' && (
-          <div className="mb-6 p-4 bg-[#18182a] rounded-lg border border-[#7286ff]/30 text-white">
-            <h3 className="text-lg font-bold mb-2 text-[#7286ff]">Preview</h3>
-            <ReactMarkdown
-              children={form.description}
-              remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSanitize]}
-              components={{
-                img: ({node, ...props}) => (
-                  <img {...props} style={{maxWidth: '100%', borderRadius: '8px', margin: '12px 0'}} alt={props.alt || ''} />
-                ),
-                code: ({node, inline, className, children, ...props}) => (
-                  <code className={className} style={{background: '#232347', color: '#ffb4d0', borderRadius: '4px', padding: '2px 6px', fontSize: '0.95em'}} {...props}>
-                    {children}
-                  </code>
-                )
-              }}
-            />
+          <div className="mb-6 p-6 bg-[#18182a] rounded-lg border border-[#7286ff]/30 text-white">
+            <h3 className="text-lg font-bold mb-4 text-[#7286ff] flex items-center">
+              <span className="mr-2">👁️</span>
+              Live Preview
+            </h3>
+            <div className="prose prose-invert prose-sm max-w-none">
+              {simpleRenderer.render(form.description)}
+            </div>
+            {!form.description && (
+              <div className="text-center text-white/50 py-8">
+                <p>Start typing in the description field above to see a live preview here!</p>
+              </div>
+            )}
           </div>
         )}
 

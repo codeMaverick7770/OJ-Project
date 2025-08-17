@@ -13,9 +13,40 @@ export const createProblem = async (req, res) => {
     return res.status(400).json({ error: 'At least one test case is required' });
   }
 
-  // Convert all literal '\n' in description to real newlines
+  // Convert all literal '\n' in description to real newlines and clean up formatting
   if (typeof description === 'string') {
+    // Replace literal \n with real newlines
     description = description.replace(/\\n/g, '\n');
+    // Clean up any double newlines that might cause rendering issues
+    description = description.replace(/\n{3,}/g, '\n\n');
+    // Ensure proper spacing around LaTeX blocks
+    description = description.replace(/(\n\$\$)/g, '\n\n$$');
+    description = description.replace(/(\$\$\n)/g, '$$\n\n');
+    
+    // Convert common LaTeX symbols to HTML entities for better rendering
+    description = description
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\pm/g, '±')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\prod/g, '∏')
+      .replace(/\\int/g, '∫')
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\delta/g, 'δ')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\lambda/g, 'λ')
+      .replace(/\\mu/g, 'μ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\sigma/g, 'σ')
+      .replace(/\\phi/g, 'φ')
+      .replace(/\\omega/g, 'ω');
   }
 
   try {
@@ -31,7 +62,8 @@ export const createProblem = async (req, res) => {
 
     await redisClient.del('all_problems'); // Invalidate cache
 
-    console.log('✅ Created:', problem.title);
+    console.log('✅ Created problem:', problem.title);
+    console.log('📝 Description length:', problem.description.length);
     res.status(201).json({ message: 'Problem created successfully', problem });
   } catch (err) {
     console.error('❌ Problem creation error:', err.message);
@@ -52,15 +84,57 @@ export const bulkCreateProblems = async (req, res) => {
   }
 
   // Convert all literal '\n' in description to real newlines for each problem
-  problems = problems.map(p => ({
-    ...p,
-    description: typeof p.description === 'string' ? p.description.replace(/\\n/g, '\n') : p.description,
-    createdBy: req.user.id,
-  }));
+  problems = problems.map(p => {
+    let cleanDescription = p.description;
+    if (typeof cleanDescription === 'string') {
+      // Replace literal \n with real newlines
+      cleanDescription = cleanDescription.replace(/\\n/g, '\n');
+      // Clean up any double newlines that might cause rendering issues
+      cleanDescription = cleanDescription.replace(/\n{3,}/g, '\n\n');
+      // Ensure proper spacing around LaTeX blocks
+      cleanDescription = cleanDescription.replace(/(\n\$\$)/g, '\n\n$$');
+      cleanDescription = cleanDescription.replace(/(\$\$\n)/g, '$$\n\n');
+      
+      // Convert common LaTeX symbols to HTML entities for better rendering
+      cleanDescription = cleanDescription
+        .replace(/\\leq/g, '≤')
+        .replace(/\\geq/g, '≥')
+        .replace(/\\neq/g, '≠')
+        .replace(/\\approx/g, '≈')
+        .replace(/\\times/g, '×')
+        .replace(/\\div/g, '÷')
+        .replace(/\\pm/g, '±')
+        .replace(/\\infty/g, '∞')
+        .replace(/\\sum/g, '∑')
+        .replace(/\\prod/g, '∏')
+        .replace(/\\int/g, '∫')
+        .replace(/\\alpha/g, 'α')
+        .replace(/\\beta/g, 'β')
+        .replace(/\\gamma/g, 'γ')
+        .replace(/\\delta/g, 'δ')
+        .replace(/\\theta/g, 'θ')
+        .replace(/\\lambda/g, 'λ')
+        .replace(/\\mu/g, 'μ')
+        .replace(/\\pi/g, 'π')
+        .replace(/\\sigma/g, 'σ')
+        .replace(/\\phi/g, 'φ')
+        .replace(/\\omega/g, 'ω');
+    }
+    
+    return {
+      ...p,
+      description: cleanDescription,
+      createdBy: req.user.id,
+    };
+  });
 
   try {
     const result = await Problem.insertMany(problems);
     await redisClient.del('all_problems'); // Invalidate cache
+    
+    console.log(`✅ Bulk created ${result.length} problems`);
+    console.log('📝 Sample description length:', result[0]?.description?.length || 'N/A');
+    
     res.status(201).json({ message: `${result.length} problems added.` });
   } catch (err) {
     console.error('❌ Bulk create failed:', err.message);

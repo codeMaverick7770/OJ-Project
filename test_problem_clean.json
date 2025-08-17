@@ -1,0 +1,36 @@
+[
+  {
+    "title": "Clean Test: Fibonacci with Math",
+    "description": "# Fibonacci Sequence\n\n## Problem Statement\n\nGiven an integer n, find the n^th Fibonacci number.\n\nThe Fibonacci sequence is defined as:\n\n$$\nF(n) = \\begin{cases}\n0 & \\text{if } n = 0 \\\\\n1 & \\text{if } n = 1 \\\\\nF(n-1) + F(n-2) & \\text{if } n > 1\n\\end{cases}\n$$\n\n## Examples\n\n- **Example 1:** F(0) = 0\n- **Example 2:** F(1) = 1  \n- **Example 3:** F(2) = F(1) + F(0) = 1 + 0 = 1\n- **Example 4:** F(3) = F(2) + F(1) = 1 + 1 = 2\n- **Example 5:** F(4) = F(3) + F(2) = 2 + 1 = 3\n\n## Input Format\n\nA single integer n where 0 ≤ n ≤ 45\n\n## Output Format\n\nReturn the n^th Fibonacci number\n\n## Constraints\n\n- 0 ≤ n ≤ 45\n- The answer will fit in a 32-bit integer\n\n## Sample Code\n\n### Python Solution:\n```python\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```\n\n### C++ Solution:\n```cpp\nint fibonacci(int n) {\n    if (n <= 1) return n;\n    int a = 0, b = 1;\n    for (int i = 2; i <= n; i++) {\n        int temp = a + b;\n        a = b;\n        b = temp;\n    }\n    return b;\n}\n```\n\n## Time Complexity\n\n- **Time:** O(n)\n- **Space:** O(1)\n\n## Additional Notes\n\nThis is a classic dynamic programming problem that demonstrates:\n\n1. **Optimal Substructure:** The solution to F(n) depends on solutions to smaller subproblems\n2. **Overlapping Subproblems:** Many subproblems are solved multiple times\n3. **Memoization:** We can optimize by storing previously computed values\n\n> **Pro Tip:** For larger values of n, consider using matrix exponentiation to achieve O(log n) time complexity!",
+    "inputFormat": "A single integer n (0 ≤ n ≤ 45)",
+    "outputFormat": "The nth Fibonacci number",
+    "constraints": [
+      "0 ≤ n ≤ 45",
+      "The answer will fit in a 32-bit integer"
+    ],
+    "difficulty": "Easy",
+    "tags": ["Dynamic Programming", "Math", "Recursion"],
+    "testCases": [
+      { "input": "0", "expectedOutput": "0" },
+      { "input": "1", "expectedOutput": "1" },
+      { "input": "5", "expectedOutput": "5" },
+      { "input": "10", "expectedOutput": "55" }
+    ],
+    "examples": [
+      { "input": "0", "output": "0" },
+      { "input": "1", "output": "1" },
+      { "input": "5", "output": "5" },
+      { "input": "10", "output": "55" }
+    ],
+    "starterCode": {
+      "cpp": "#include <iostream>\\nusing namespace std;\\n\\nint fibonacci(int n) {\\n    // TODO: Implement your solution here\\n    return 0;\\n}\\n\\nint main() {\\n    int n;\\n    cin >> n;\\n    cout << fibonacci(n) << endl;\\n    return 0;\\n}",
+      "java": "import java.util.*;\\n\\npublic class Main {\\n    public static int fibonacci(int n) {\\n        // TODO: Implement your solution here\\n        return 0;\\n    }\\n    \\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in);\\n        int n = sc.nextInt();\\n        System.out.println(fibonacci(n));\\n    }\\n}",
+      "python": "def fibonacci(n):\\n    # TODO: Implement your solution here\\n    pass\\n\\n# Read input\\nn = int(input())\\nprint(fibonacci(n))"
+    },
+    "solutionCode": {
+      "cpp": "#include <iostream>\\nusing namespace std;\\n\\nint fibonacci(int n) {\\n    if (n <= 1) return n;\\n    int a = 0, b = 1;\\n    for (int i = 2; i <= n; i++) {\\n        int temp = a + b;\\n        a = b;\\n        b = temp;\\n    }\\n    return b;\\n}\\n\\nint main() {\\n    int n;\\n    cin >> n;\\n    cout << fibonacci(n) << endl;\\n    return 0;\\n}",
+      "java": "import java.util.*;\\n\\npublic class Main {\\n    public static int fibonacci(n) {\\n        if (n <= 1) return n;\\n        int a = 0, b = 1;\\n        for (int i = 2; i <= n; i++) {\\n            int temp = a + b;\\n            a = b;\\n            b = temp;\\n        }\\n        return b;\\n    }\\n    \\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in);\\n        int n = sc.nextInt();\\n        System.out.println(fibonacci(n));\\n    }\\n}",
+      "python": "def fibonacci(n):\\n    if (n <= 1):\\n        return n\\n    a, b = 0, 1\\n    for _ in range(2, n + 1):\\n        a, b = b, a + b\\n    return b\\n\\n# Read input\\nn = int(input())\\nprint(fibonacci(n))"
+    }
+  }
+]
