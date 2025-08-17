@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { simpleRenderer } from '../utils/simpleRenderer.jsx';
+import EnhancedRenderer from '../utils/enhancedRenderer.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 
 export default function CreateProblem() {
   const [mode, setMode] = useState('single'); // 'single' or 'bulk'
@@ -162,9 +163,9 @@ export default function CreateProblem() {
               <span className="mr-2">👁️</span>
               Live Preview
             </h3>
-            <div className="prose prose-invert prose-sm max-w-none">
-              {simpleRenderer.render(form.description)}
-            </div>
+                         <div className="text-white text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+               <EnhancedRenderer content={form.description} />
+             </div>
             {!form.description && (
               <div className="text-center text-white/50 py-8">
                 <p>Start typing in the description field above to see a live preview here!</p>
@@ -189,7 +190,15 @@ export default function CreateProblem() {
             <>
               <input type="text" name="title" placeholder="Title" value={form.title} onChange={handleChange} required className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400" />
 
-              <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} required className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400" rows={4} />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/80">Description</label>
+                <RichTextEditor
+                  value={form.description}
+                  onChange={(value) => setForm({ ...form, description: value })}
+                  placeholder="Write your problem description with rich formatting..."
+                  className="w-full"
+                />
+              </div>
 
               <textarea name="inputFormat" placeholder="Input Format" value={form.inputFormat} onChange={handleChange} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400" rows={2} />
               <textarea name="outputFormat" placeholder="Output Format" value={form.outputFormat} onChange={handleChange} className="w-full p-3 rounded-lg bg-white/10 placeholder-gray-400" rows={2} />

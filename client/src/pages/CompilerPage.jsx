@@ -8,7 +8,7 @@ import AIHelpModal from '../components/AIHelpModal';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { Wand2, Check } from 'lucide-react';
 import Split from 'react-split';
-import { simpleRenderer } from '../utils/simpleRenderer.jsx';
+import EnhancedRenderer from '../utils/enhancedRenderer.jsx';
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello, World!\";\n  return 0;\n}`,
@@ -478,9 +478,9 @@ export default function CompilerPage() {
               </pre>
             </details>
             
-            <div className="text-white text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
-              {simpleRenderer.render(problem.description)}
-            </div>
+                                                   <div className="text-white text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+                <EnhancedRenderer content={problem.description} />
+              </div>
           </div>
 
           {problem.inputFormat && (
