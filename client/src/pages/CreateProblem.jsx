@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeSanitize from 'rehype-sanitize';
+import 'katex/dist/katex.min.css';
 
 export default function CreateProblem() {
   const [mode, setMode] = useState('single'); // 'single' or 'bulk'
@@ -24,6 +30,7 @@ export default function CreateProblem() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -143,6 +150,37 @@ export default function CreateProblem() {
             Switch to {mode === 'single' ? 'Bulk Mode' : 'Single Mode'}
           </button>
         </div>
+        {/* Preview toggle button */}
+        {mode === 'single' && (
+          <button
+            type="button"
+            className="mb-4 px-4 py-1 rounded bg-gradient-to-r from-[#7286ff] to-[#fe7587] text-white font-semibold shadow hover:brightness-110"
+            onClick={() => setShowPreview((p) => !p)}
+          >
+            {showPreview ? 'Hide Preview' : 'Preview Description'}
+          </button>
+        )}
+        {/* Preview area */}
+        {showPreview && mode === 'single' && (
+          <div className="mb-6 p-4 bg-[#18182a] rounded-lg border border-[#7286ff]/30 text-white">
+            <h3 className="text-lg font-bold mb-2 text-[#7286ff]">Preview</h3>
+            <ReactMarkdown
+              children={form.description}
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSanitize]}
+              components={{
+                img: ({node, ...props}) => (
+                  <img {...props} style={{maxWidth: '100%', borderRadius: '8px', margin: '12px 0'}} alt={props.alt || ''} />
+                ),
+                code: ({node, inline, className, children, ...props}) => (
+                  <code className={className} style={{background: '#232347', color: '#ffb4d0', borderRadius: '4px', padding: '2px 6px', fontSize: '0.95em'}} {...props}>
+                    {children}
+                  </code>
+                )
+              }}
+            />
+          </div>
+        )}
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {success && <p className="text-green-400 mb-4">{success}</p>}

@@ -3,7 +3,7 @@ import redisClient from '../utils/redisClient.js'; // adjust path if needed
 
 // Admin: Create problem
 export const createProblem = async (req, res) => {
-  const { title, description, difficulty, tags = [], testCases, solutionCode = {} } = req.body;
+  let { title, description, difficulty, tags = [], testCases, solutionCode = {} } = req.body;
 
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied: Admins only' });
@@ -11,6 +11,11 @@ export const createProblem = async (req, res) => {
 
   if (!Array.isArray(testCases) || testCases.length === 0) {
     return res.status(400).json({ error: 'At least one test case is required' });
+  }
+
+  // Convert all literal '\n' in description to real newlines
+  if (typeof description === 'string') {
+    description = description.replace(/\\n/g, '\n');
   }
 
   try {
@@ -40,19 +45,21 @@ export const bulkCreateProblems = async (req, res) => {
     return res.status(403).json({ error: 'Access denied: Admins only' });
   }
 
-  const problems = req.body;
+  let problems = req.body;
 
   if (!Array.isArray(problems)) {
     return res.status(400).json({ error: 'Expected an array of problems' });
   }
 
-  try {
-    const enrichedProblems = problems.map(p => ({
-      ...p,
-      createdBy: req.user.id,
-    }));
+  // Convert all literal '\n' in description to real newlines for each problem
+  problems = problems.map(p => ({
+    ...p,
+    description: typeof p.description === 'string' ? p.description.replace(/\\n/g, '\n') : p.description,
+    createdBy: req.user.id,
+  }));
 
-    const result = await Problem.insertMany(enrichedProblems);
+  try {
+    const result = await Problem.insertMany(problems);
     await redisClient.del('all_problems'); // Invalidate cache
     res.status(201).json({ message: `${result.length} problems added.` });
   } catch (err) {

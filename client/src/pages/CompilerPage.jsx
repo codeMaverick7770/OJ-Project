@@ -9,7 +9,11 @@ import { Player } from '@lottiefiles/react-lottie-player';
 import { Wand2, Check } from 'lucide-react';
 import Split from 'react-split';
 import 'katex/dist/katex.min.css';
-import { InlineMath } from 'react-katex';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeSanitize from 'rehype-sanitize';
 
 const defaultHelloWorld = {
   cpp: `#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello, World!\";\n  return 0;\n}`,
@@ -453,25 +457,6 @@ export default function CompilerPage() {
 
   const renderProblemDescription = () => {
     if (!problem) return null;
-    
-    const renderLinesWithLatex = (text) => {
-      return text.split("\n").map((line, idx) => (
-        <p key={idx} className="mb-2 leading-relaxed">
-          {line.includes("$") ? (
-            line.split("$").map((segment, i) =>
-              i % 2 === 1 ? (
-                <InlineMath math={segment} key={i} />
-              ) : (
-                <span key={i}>{segment}</span>
-              )
-            )
-          ) : (
-            line
-          )}
-        </p>
-      ));
-    };
-
     return (
       <div className="space-y-6 text-white font-sans">
         <h2 className="text-2xl font-extrabold mb-4 bg-gradient-to-r from-[#7286ff] to-[#fe7587] bg-clip-text text-transparent drop-shadow-lg">
@@ -484,7 +469,21 @@ export default function CompilerPage() {
               Description
             </h3>
             <div className="text-white text-sm leading-relaxed">
-              {renderLinesWithLatex(problem.description)}
+              <ReactMarkdown
+                children={problem.description}
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSanitize]}
+                components={{
+                  img: ({node, ...props}) => (
+                    <img {...props} style={{maxWidth: '100%', borderRadius: '8px', margin: '12px 0'}} alt={props.alt || ''} />
+                  ),
+                  code: ({node, inline, className, children, ...props}) => (
+                    <code className={className} style={{background: '#232347', color: '#ffb4d0', borderRadius: '4px', padding: '2px 6px', fontSize: '0.95em'}} {...props}>
+                      {children}
+                    </code>
+                  )
+                }}
+              />
             </div>
           </div>
 
