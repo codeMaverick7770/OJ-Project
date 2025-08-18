@@ -182,6 +182,29 @@ export const getSingleProblem = async (req, res) => {
   }
 };
 
+// Admin: Update problem
+export const updateProblem = async (req, res) => {
+  try {
+    const updatedProblem = await Problem.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProblem) {
+      return res.status(404).json({ error: 'Problem not found' });
+    }
+
+    // Invalidate cache
+    await redisClient.del('all_problems');
+    await redisClient.del(`problem:${req.params.id}`);
+
+    res.status(200).json({ message: 'Problem updated successfully', problem: updatedProblem });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update problem' });
+  }
+};
+
 // Admin: Delete problem
 export const deleteProblem = async (req, res) => {
   if (req.user.role !== 'admin') {

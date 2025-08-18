@@ -5,20 +5,18 @@ import {
   getSingleProblem,
   deleteProblem,
   bulkCreateProblems,
+  updateProblem,
 } from '../controller/problemController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
-import { verifyAdmin } from '../middleware/admin.js'; // ✅ import admin check
+import { verifyAdmin } from '../middleware/admin.js';
 
 const router = express.Router();
 
 // Admin Only
-router.post('/create', verifyToken, verifyAdmin, createProblem);  // ✅ admin protected
-router.post('/bulk', verifyToken, verifyAdmin, bulkCreateProblems); // ✅ admin protected
-router.delete('/:id', verifyToken, verifyAdmin, deleteProblem);    // ✅ admin protected
-
-// New Route: Bulk Create Problems
-router.post('/bulk', verifyToken, verifyAdmin, bulkCreateProblems); // ✅ new route
-
+router.post('/create', verifyToken, verifyAdmin, createProblem);
+router.post('/bulk', verifyToken, verifyAdmin, bulkCreateProblems);
+router.put('/:id', verifyToken, verifyAdmin, updateProblem);
+router.delete('/:id', verifyToken, verifyAdmin, deleteProblem);
 
 // Public
 router.get('/', getAllProblems);

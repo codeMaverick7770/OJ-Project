@@ -51,7 +51,7 @@ const CompilerEditor = ({ code, setCode, language = "javascript", markers = [] }
   }, [markers]);
 
   return (
-    <div className="h-[400px] rounded-lg overflow-hidden w-full">
+    <div className="h-full rounded-lg overflow-hidden w-full">
       <Editor
         height="100%"
         width="100%"

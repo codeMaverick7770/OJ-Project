@@ -327,3 +327,115 @@ const MarkdownRenderer = ({ content }) => {
 };
 
 export default EnhancedRenderer;
+
+// Add CSS for enhanced HTML content
+const styles = `
+  .enhanced-html-content h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem 0;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+  
+  .enhanced-html-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.5rem 0;
+    color: #ffffff;
+    line-height: 1.3;
+  }
+  
+  .enhanced-html-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem 0;
+    color: #ffffff;
+    line-height: 1.4;
+  }
+  
+  .enhanced-html-content p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .enhanced-html-content ul {
+    list-style: none;
+    padding-left: 1.25rem;
+  }
+  
+  .enhanced-html-content ul, .enhanced-html-content ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .enhanced-html-content li {
+    margin: 0.25rem 0;
+    line-height: 1.5;
+  }
+  
+  .enhanced-html-content blockquote {
+    border-left: 4px solid #7286ff;
+    margin: 1rem 0;
+    padding-left: 1rem;
+    font-style: italic;
+    color: #a0aec0;
+    background: rgba(114, 134, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .enhanced-html-content code {
+    background: rgba(42, 42, 61, 0.8);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    color: #7286ff;
+    border: 1px solid rgba(114, 134, 255, 0.2);
+  }
+  
+  .enhanced-html-content pre {
+    background: rgba(26, 26, 46, 0.8);
+    border: 1px solid rgba(114, 134, 255, 0.2);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  .enhanced-html-content pre code {
+    background: none;
+    padding: 0;
+    color: #e2e8f0;
+    border: none;
+  }
+  
+  .enhanced-html-content hr {
+    border: none;
+    border-top: 1px solid rgba(114, 134, 255, 0.3);
+    margin: 1rem 0;
+  }
+  
+  .enhanced-html-content strong {
+    font-weight: 600;
+    color: #ffffff;
+  }
+  
+  .enhanced-html-content em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.8);
+  }
+`;
+
+// Inject styles into the document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = styles;
+  document.head.appendChild(styleElement);
+}
